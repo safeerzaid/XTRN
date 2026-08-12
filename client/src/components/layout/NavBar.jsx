@@ -9,6 +9,8 @@ import {
   FiMenu,
   FiUser,
   FiX,
+  FiChevronRight,
+  FiChevronLeft,
 } from "react-icons/fi";
 import gsap from "gsap";
 
@@ -20,6 +22,8 @@ const Navbar = () => {
   const [active, setActive] = useState(null);
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState([]);
+  
 
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [tabletSearchOpen, setTabletSearchOpen] = useState(false);
@@ -64,17 +68,113 @@ const Navbar = () => {
      HAMBURGER GSAP REFS
   ───────────────────────────────────────────── */
 
-  const menuOverlayRef = useRef(null);
-  const menuLogoRef    = useRef(null);
-  const menuCloseRef   = useRef(null);
-  const menuItemsRef   = useRef([]);
+  const menuOverlayRef     = useRef(null);
+  const menuLogoRef        = useRef(null);
+  const menuCloseRef       = useRef(null);
+  const menuItemsRef       = useRef([]);
+  const prevPathLengthRef  = useRef(0);   // tracks direction: forward vs back
 
   /* ─────────────────────────────────────────────
      HAMBURGER TOGGLE
   ───────────────────────────────────────────── */
 
   const toggleMenu = () => setMenuOpen((prev) => !prev);
-  const closeMenu  = () => setMenuOpen(false);
+
+  // closeMenu hides the overlay immediately, then resets the path AFTER
+  // the CSS close animation finishes (0.45s transition + small buffer = 500ms).
+  // Without the delay, React re-renders with menuPath=[] while the overlay is
+  // still on screen sliding away — causing a flash back to the root level.
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setTimeout(() => setMenuPath([]), 500);
+  };
+
+  /* ─────────────────────────────────────────────
+     MULTI-LEVEL MENU HELPERS
+  ───────────────────────────────────────────── */
+
+  /**
+   * openSubMenu — push a new level onto menuPath.
+   * React concept: functional state update via the prev => [...prev, label] pattern,
+   * which always works on the latest state even inside closures.
+   *
+   * Example:
+   *   menuPath = []       → click "MEN"      → menuPath = ["MEN"]
+   *   menuPath = ["MEN"]  → click "TOP WEAR" → menuPath = ["MEN", "TOP WEAR"]
+   */
+  const openSubMenu = (label) => {
+    setMenuPath((prev) => [...prev, label]);
+  };
+
+  /**
+   * goBack — pop the last item off menuPath (go one level up).
+   * Array.slice(0, -1) returns everything except the last element.
+   *
+   * Example:
+   *   menuPath = ["MEN", "TOP WEAR"] → goBack() → menuPath = ["MEN"]
+   *   menuPath = ["MEN"]             → goBack() → menuPath = []
+   */
+  const goBack = () => {
+    setMenuPath((prev) => prev.slice(0, -1));
+  };
+
+  /**
+   * getCurrentMenuItems — derives what to render from the current menuPath.
+   *
+   * This is the heart of the system. It reads menuPath and returns
+   * an array of { label, children } objects:
+   *   children !== null → clicking goes deeper (openSubMenu)
+   *   children === null → clicking is a final navigation action
+   *
+   * Level 0 (menuPath = []):
+   *   Shows the 5 top-level nav items: MEN, WOMEN, SPORTS, ACCESSORIES, SALE
+   *   Each item's children = navigationData[key].sections (or null if no data, e.g. SALE)
+   *
+   * Level 1 (menuPath = ["MEN"]):
+   *   Shows that category's sections: TOP WEAR, BOTTOM WEAR, FOOTWEAR, JACKETS…
+   *   Each section's children = section.items (the leaf strings)
+   *
+   * Level 2 (menuPath = ["MEN", "TOP WEAR"]):
+   *   Shows the actual items: T-Shirts, Polo Shirts, Tank Tops…
+   *   children = null (these are leaves — clicking navigates)
+   */
+  const getCurrentMenuItems = () => {
+    // ── LEVEL 0 — root: the 5 main categories ──────────────────
+    if (menuPath.length === 0) {
+      return navItems.map((item) => ({
+        label: item,
+        // Optional chaining (?.) safely returns undefined if the key doesn't exist
+        // Nullish coalescing (??) falls back to null (SALE has no navigationData entry)
+        children: navigationData[item.toLowerCase()]?.sections ?? null,
+      }));
+    }
+
+    // ── LEVEL 1 — category: e.g. "MEN" → its sections ──────────
+    if (menuPath.length === 1) {
+      const topKey  = menuPath[0].toLowerCase();
+      const topData = navigationData[topKey];
+      if (!topData) return []; // safety: e.g. if SALE is somehow clicked
+      return topData.sections.map((section) => ({
+        label:    section.title,
+        children: section.items,  // array of strings → next level will be leaves
+      }));
+    }
+
+    // ── LEVEL 2 — section: e.g. "TOP WEAR" → its leaf items ─────
+    if (menuPath.length === 2) {
+      const topKey  = menuPath[0].toLowerCase();
+      const topData = navigationData[topKey];
+      if (!topData) return [];
+      const section = topData.sections.find((s) => s.title === menuPath[1]);
+      if (!section) return [];
+      return section.items.map((item) => ({
+        label:    item,
+        children: null, // null = leaf — clicking will eventually navigate
+      }));
+    }
+
+    return []; // future-proofing: any deeper level returns empty
+  };
 
   /* ─────────────────────────────────────────────
      BODY SCROLL LOCK
@@ -86,6 +186,46 @@ const Navbar = () => {
       document.body.style.overflow = "";
     };
   }, [menuOpen]);
+
+  /* ─────────────────────────────────────────────
+     LEVEL-CHANGE ANIMATION
+     Fires whenever menuPath changes OR menuOpen changes.
+     Slides new items in from the right (going deeper)
+     or from the left (going back).
+  ───────────────────────────────────────────── */
+
+  useEffect(() => {
+    // If the menu is closed, reset direction tracker and exit
+    if (!menuOpen) {
+      prevPathLengthRef.current = 0;
+      return;
+    }
+
+    // Collect all the currently-rendered item buttons via their refs
+    const items = menuItemsRef.current.filter(Boolean);
+    if (items.length === 0) return;
+
+    // Determine direction:
+    //   menuPath grew (went deeper) → slide in from RIGHT (x: +32)
+    //   menuPath shrank (went back)  → slide in from LEFT  (x: -32)
+    const isGoingDeeper = menuPath.length >= prevPathLengthRef.current;
+    prevPathLengthRef.current = menuPath.length; // remember for next change
+
+    gsap.fromTo(
+      items,
+      // FROM: invisible, offset to left or right
+      { autoAlpha: 0, x: isGoingDeeper ? 32 : -32 },
+      // TO: fully visible, in place
+      {
+        autoAlpha: 1,
+        x: 0,
+        duration: 0.3,
+        stagger: 0.045,
+        ease: "power3.out",
+        overwrite: true, // cancel any in-progress animation on these elements
+      }
+    );
+  }, [menuPath, menuOpen]); // re-runs on every level change AND on menu open/close
 
   /* ─────────────────────────────────────────────
      HAMBURGER GSAP ANIMATION
@@ -385,7 +525,7 @@ const Navbar = () => {
       ═══════════════════════════════════════════════ */}
 
       <div
-        className="fixed inset-0 z-[80] flex flex-col items-center justify-center lg:hidden"
+        className="fixed inset-0 z-[80] flex flex-col lg:hidden"
         style={{
           background: "#fff",
           transform: menuOpen ? "translateY(0%)" : "translateY(-100%)",
@@ -396,43 +536,109 @@ const Navbar = () => {
           willChange: "transform",
         }}
       >
-        {/* Close Button */}
-        <button
-          onClick={closeMenu}
-          aria-label="Close menu"
-          className="absolute right-5 top-5 flex items-center justify-center p-2 text-black outline-none"
-          style={{
-            WebkitTapHighlightColor: "transparent",
-            WebkitAppearance: "none",
-          }}
-        >
-          <FiX size={27} strokeWidth={1.6} />
-        </button>
+        {/* ── TOP ROW: Logo centred + Close button right ──────────────────
+             Close button lives INSIDE the flex row (not absolute),
+             so it can never be covered by another element.
+             Logo is absolutely centred within the row.
+        ─────────────────────────────────────────────────────────────── */}
+        <div className="relative flex h-20 flex-shrink-0 items-center px-5">
 
-        {/* Logo */}
-        <div className="mb-10">
-          <img
-            src={logo}
-            alt="NRGY Logo"
-            className="w-[120px] h-auto select-none"
-            draggable="false"
-          />
+          {/* Logo — centred in the row */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <img
+              src={logo}
+              alt="NRGY Logo"
+              className="w-[80px] h-auto select-none"
+              draggable="false"
+            />
+          </div>
+
+          {/* Close button — right edge, always clickable */}
+          <button
+            onClick={closeMenu}
+            aria-label="Close menu"
+            className="ml-auto flex items-center justify-center p-2 text-black outline-none"
+            style={{
+              WebkitTapHighlightColor: "transparent",
+              WebkitAppearance: "none",
+              touchAction: "manipulation",
+            }}
+          >
+            <FiX size={24} strokeWidth={1.6} />
+          </button>
         </div>
 
-        {/* Menu Links */}
-        <nav className="flex flex-col items-center">
-          {navItems.map((item) => (
+        {/* ── BACK ROW: only visible when inside a sub-level ─────────────── */}
+        {menuPath.length > 0 && (
+          <div className="flex items-center px-6 pb-1">
             <button
-              key={item}
-              onClick={closeMenu}
-              className="px-10 py-2.5 text-[24px] tracking-wide text-black outline-none"
+              onClick={goBack}
+              aria-label="Go back one level"
+              className="flex items-center gap-1.5 text-black outline-none"
               style={{
                 fontFamily: "var(--font-nav)",
+                fontSize: "11px",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
                 WebkitTapHighlightColor: "transparent",
                 WebkitAppearance: "none",
+                touchAction: "manipulation",
               }}
             >
-              {item}
+              <FiChevronLeft size={15} strokeWidth={2.5} />
+              BACK
+            </button>
+          </div>
+        )}
+
+        {/* ── CURRENT LEVEL TITLE ─────────────────────────────────────────── */}
+        <div className="flex items-center justify-center pt-2 pb-6">
+          <span
+            className="text-[11px] font-bold tracking-[0.22em] text-black select-none"
+            style={{ fontFamily: "var(--font-nav)" }}
+          >
+            {menuPath.length === 0 ? "MENU" : menuPath[menuPath.length - 1]}
+          </span>
+        </div>
+
+        {/* ── SCROLLABLE ITEM LIST ────────────────────────────────────────────
+             Every item — whether a parent or leaf — is rendered the same way:
+             · Large centred text (matching the original big MEN / WOMEN style)
+             · FiChevronRight on ALL items (user requested "everything have > icon")
+             · No separator lines
+        ─────────────────────────────────────────────────────────────── */}
+        <nav
+          className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 pb-10"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {getCurrentMenuItems().map((menuItem, index) => (
+            <button
+              key={menuItem.label}
+              ref={(el) => { menuItemsRef.current[index] = el; }}
+              onClick={() => {
+                if (menuItem.children) {
+                  openSubMenu(menuItem.label);
+                } else {
+                  // Leaf item — routing placeholder
+                  // TODO: swap console.log for navigate() once React Router is added
+                  console.log("Navigate to:", [...menuPath, menuItem.label].join(" › "));
+                  closeMenu();
+                }
+              }}
+              aria-label={menuItem.label}
+              className="flex items-center py-2 text-black outline-none"
+              style={{
+                fontFamily: "var(--font-nav)",
+                fontSize: "22px",
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                WebkitTapHighlightColor: "transparent",
+                WebkitAppearance: "none",
+                touchAction: "manipulation",
+              }}
+            >
+              {menuItem.label}
             </button>
           ))}
         </nav>

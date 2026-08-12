@@ -34,6 +34,16 @@ const navigationData = {
           "Casual Shoes",
         ],
       },
+
+      {
+        title: "JACKETS & SWEATSHIRTS",
+        items: [
+          "Raincoat & Ponchos",
+          "Sports Jackets",
+          "Winter Jackets",
+          "Windcheaters",
+        ],
+      },
     ],
   },
 
@@ -71,6 +81,16 @@ const navigationData = {
         items: [
           "Sports Shoes",
           "Casual Shoes",
+        ],
+      },
+
+      {
+        title: "JACKETS & SWEATSHIRTS",
+        items: [
+          "Raincoat & Ponchos",
+          "Sports Jackets",
+          "Winter Jackets",
+          "Windcheaters",
         ],
       },
     ],
@@ -201,7 +221,7 @@ const navigationData = {
         title: "SUN & EYEWEAR",
         items: [
           "Sunglasses",
-          "Sports Sunglasses"
+          "Sports Sunglasses",
         ],
       },
     ],
