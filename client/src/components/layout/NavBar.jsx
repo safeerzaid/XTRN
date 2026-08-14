@@ -648,7 +648,7 @@ const Navbar = () => {
           MOBILE NAVBAR  (< 768 px)
       ═══════════════════════════════════════════════ */}
 
-      <div className="fixed top-0 left-0 z-50 w-full md:hidden">
+      <div className="fixed top-0 left-0 right-0 z-50 w-full md:hidden" style={{ top: 0 }}>
         <div
           className="relative flex h-16 w-full items-center bg-white px-5 border-b border-gray-200"
           style={{
@@ -748,7 +748,7 @@ const Navbar = () => {
           TABLET NAVBAR  (768 px – 1023 px)
       ═══════════════════════════════════════════════ */}
 
-      <nav className="fixed top-0 left-0 z-50 hidden w-full text-white md:block lg:hidden">
+      <nav className="fixed top-0 left-0 right-0 z-50 hidden w-full text-white md:block lg:hidden" style={{ top: 0 }}>
         <div className="relative flex h-16 w-full items-center px-6">
 
           {/* Left — Hamburger */}
@@ -831,8 +831,8 @@ const Navbar = () => {
 
        <nav
         ref={desktopNavRef}
-        className="fixed top-0 left-0 z-50 hidden w-full lg:block"
-        style={{ backgroundColor: "rgba(255,255,255,0)" }}
+        className="fixed top-0 left-0 right-0 z-50 hidden w-full lg:block"
+        style={{ top: 0, backgroundColor: "rgba(255,255,255,0)" }}
         onMouseEnter={() => setDesktopHovered(true)}
         onMouseLeave={() => {
           setDesktopHovered(false);

@@ -2,11 +2,15 @@ import { useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import { IoIosArrowForward, IoIosArrowBack } from "react-icons/io";
-import { sportsCategories } from "../../data/Sports";
+import { sports } from "../../data/Sports";
+import { Link } from "react-router-dom";
 
 function SportCard({ sport }) {
   return (
     <div className="group relative overflow-hidden aspect-[3/4] cursor-pointer">
+
+      <Link 
+      to={`/products/${sport.name.toLowerCase()}`}>
       {/* Background image */}
       <img
         src={sport.image}
@@ -29,6 +33,7 @@ function SportCard({ sport }) {
       ">
         {sport.name}
       </h3>
+      </Link>
     </div>
   );
 }
@@ -37,9 +42,9 @@ function ExploreSports() {
   const swiperRef = useRef(null);
 
   return (
-    <section className="mx-auto mt-20 md:mt-26 max-w-[1600px] 2xl:max-w-[2200px] px-0 sm:px-6 md:px-14 2xl:px-20 pb-16 md:pb-24"> 
+    <section className="mx-auto mt-20 md:mt-26 max-w-[1600px] 2xl:max-w-[2200px] px-0 sm:px-6 md:px-14 2xl:px-20 pb-16 md:pb-24">
       <div className="mb-5 md:mb-10 flex items-center justify-between">
-      <h2 className="font-nav text-2xl sm:text-4xl md:text-4xl lg:text-5xl font-semibold px-4 sm:px-0">
+        <h2 className="font-nav text-2xl sm:text-4xl md:text-4xl lg:text-5xl font-semibold px-4 sm:px-0">
           Explore Sports
         </h2>
 
@@ -105,7 +110,7 @@ function ExploreSports() {
           }}
           className="!overflow-visible"
         >
-          {sportsCategories.map((sport) => (
+          {sports.map((sport) => (
             <SwiperSlide key={sport.id}>
               <SportCard sport={sport} />
             </SwiperSlide>

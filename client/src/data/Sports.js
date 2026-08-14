@@ -1,53 +1,45 @@
-import tennisimg from "../assets/images/sports banner/tennis.jpg";
-import footballimg from "../assets/images/sports banner/football.png";
-import runningimg from "../assets/images/sports banner/running.png";
-import basketballimg from "../assets/images/sports banner/basketball.png";
-import swimmingimg from "../assets/images/sports banner/swimming.png";
-import trainingimg from "../assets/images/sports banner/training.jpg";
-import cyclingimg from "../assets/images/sports banner/cycling.png";
-import boxingimg from "../assets/images/sports banner/boxing.jpg";
+import cyclingImg from "../assets/images/sports banner/cycling.png";
+import footballImg from "../assets/images/sports banner/football.png";
+import runningImg from "../assets/images/sports banner/running.png";
+import swimmingImg from "../assets/images/sports banner/swimming.png";
+import tennisImg from "../assets/images/sports banner/tennis.jpg";
+import trainingImg from "../assets/images/sports banner/training.jpg";
 
-
-export const sportsCategories = [
+export const sports = [
   {
     id: 1,
     name: "Running",
-    image: runningimg,
+    slug: "running",
+    image: runningImg,
   },
   {
     id: 2,
     name: "Football",
-    image: footballimg,
-
+    slug: "football",
+    image: footballImg,
   },
   {
     id: 3,
-    name: "Basketball",
-    image: basketballimg,
+    name: "Cycling",
+    slug: "cycling",
+    image: cyclingImg,
   },
   {
     id: 4,
-    name: "Tennis",
-    image: tennisimg,
+    name: "Swimming",
+    slug: "swimming",
+    image: swimmingImg,
   },
   {
     id: 5,
-    name: "Swimming",
-    image: swimmingimg,
+    name: "Tennis",
+    slug: "tennis",
+    image: tennisImg,
   },
   {
     id: 6,
     name: "Training",
-    image: trainingimg,
-  },
-  {
-    id: 7,
-    name: "Cycling",
-    image: cyclingimg,
-  },
-  {
-    id: 8,
-    name: "Boxing",
-    image: boxingimg,
+    slug: "training",
+    image: trainingImg,
   },
 ];
