@@ -9,7 +9,6 @@ const navigationData = {
           "T-Shirts",
           "Polo Shirts",
           "Tank Tops",
-          "Jerseys",
           "Hoodies",
           "Sweatshirts",
           "Jackets",
@@ -58,7 +57,6 @@ const navigationData = {
           "Sports Tops",
           "Tank Tops",
           "Sports Bras",
-          "Jerseys",
           "Hoodies",
           "Sweatshirts",
           "Jackets",
@@ -185,7 +183,6 @@ const navigationData = {
         title: "BAGS",
         items: [
           "Backpacks",
-          "Sports Bags",
           "Duffel Bags",
           "Waist Bags",
         ],
