@@ -59,6 +59,49 @@
 - Tree-shaken icon imports
 - `will-change` and `overwrite` hints for GSAP performance
 
+<<<<<<< HEAD
+=======
+---
+
+## Project Structure
+
+```
+xtrn/
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── images/
+│   │   │       └── logo/
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   └── NavBar.jsx          # Navbar (mobile + tablet + desktop)
+│   │   │   ├── sections/
+│   │   │   │   ├── Hero.jsx
+│   │   │   │   ├── TrendingProducts.jsx
+│   │   │   │   ├── ExploreSports.jsx
+│   │   │   │   ├── FeaturedCollections.jsx
+│   │   │   │   └── ShopTheLook.jsx
+│   │   │   └── ui/
+│   │   │       ├── MegaMenu.jsx        # Desktop mega menu
+│   │   │       └── ProductCard.jsx
+│   │   ├── data/
+│   │   │   ├── Navigation.js           # Single source of truth for all nav categories
+│   │   │   ├── Products.js
+│   │   │   └── Sports.js
+│   │   ├── pages/
+│   │   │   └── Home.jsx
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── index.html
+│   └── vite.config.js
+├── package.json
+└── README.md
+```
+
+---
+>>>>>>> restore-old-version
 
 ## Getting Started
 
