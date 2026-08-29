@@ -7,12 +7,9 @@ const navigationData = {
         title: "TOP WEAR",
         items: [
           "T-Shirts",
-          "Polo Shirts",
           "Tank Tops",
           "Hoodies",
           "Sweatshirts",
-          "Jackets",
-          "Base Layers",
         ],
       },
 
@@ -21,7 +18,6 @@ const navigationData = {
         items: [
           "Shorts",
           "Track Pants",
-          "Trousers",
           "Compression Wear",
         ],
       },
@@ -35,12 +31,10 @@ const navigationData = {
       },
 
       {
-        title: "JACKETS & SWEATSHIRTS",
+        title: "JACKETS",
         items: [
-          "Raincoat & Ponchos",
-          "Sports Jackets",
-          "Winter Jackets",
-          "Windcheaters",
+          "Raincoat",
+          "Jackets"
         ],
       },
     ],
@@ -54,12 +48,10 @@ const navigationData = {
         title: "TOP WEAR",
         items: [
           "T-Shirts",
-          "Sports Tops",
           "Tank Tops",
           "Sports Bras",
           "Hoodies",
           "Sweatshirts",
-          "Jackets",
         ],
       },
 
@@ -68,9 +60,7 @@ const navigationData = {
         items: [
           "Shorts",
           "Leggings",
-          "Joggers",
           "Track Pants",
-          "Trousers",
         ],
       },
 
@@ -83,12 +73,10 @@ const navigationData = {
       },
 
       {
-        title: "JACKETS & SWEATSHIRTS",
+        title: "JACKETS",
         items: [
-          "Raincoat & Ponchos",
-          "Sports Jackets",
-          "Winter Jackets",
-          "Windcheaters",
+          "Raincoat",
+           "Jackets",
         ],
       },
     ],
@@ -103,10 +91,7 @@ const navigationData = {
         items: [
           "Football",
           "Basketball",
-          "Cricket",
-          "Volleyball",
-          "Hockey",
-          "Baseball",
+          "Cricket"
         ],
       },
 
@@ -115,26 +100,21 @@ const navigationData = {
         items: [
           "Hiking",
           "Camping",
-          "Skiing",
-          "Snowboarding",
           "Fishing",
-          "Horse Riding",
         ],
       },
 
       {
-        title: "RUNNING & WALKING",
+        title: "RUNNING",
         items: [
-          "Running",
-          "Walking",
+          "Running"
         ],
       },
 
       {
-        title: "FITNESS & YOGA",
+        title: "FITNESS",
         items: [
           "Fitness",
-          "Yoga",
           "Boxing",
         ],
       },
@@ -142,34 +122,23 @@ const navigationData = {
       {
         title: "CYCLING",
         items: [
-          "Cycling",
+          "Cycling"
         ],
       },
 
       {
         title: "WATER SPORTS",
         items: [
-          "Swimming",
-          "Surfing",
-          "Kayaking",
+          "Swimming"
         ],
       },
 
-      {
-        title: "ROLLER SPORTS",
-        items: [
-          "Skating",
-          "Scooter",
-          "Skateboarding",
-        ],
-      },
 
       {
         title: "RACKET SPORTS",
         items: [
           "Badminton",
-          "Tennis",
-          "Table Tennis",
+          "Tennis"
         ],
       },
     ],
@@ -183,8 +152,7 @@ const navigationData = {
         title: "BAGS",
         items: [
           "Backpacks",
-          "Duffel Bags",
-          "Waist Bags",
+          "Duffel Bags"
         ],
       },
 
@@ -192,16 +160,7 @@ const navigationData = {
         title: "HEADWEAR",
         items: [
           "Caps",
-          "Hats",
           "Headbands",
-        ],
-      },
-
-      {
-        title: "SOCKS",
-        items: [
-          "Sports Socks",
-          "Everyday Socks",
         ],
       },
 
@@ -209,8 +168,6 @@ const navigationData = {
         title: "HYDRATION",
         items: [
           "Water Bottles",
-          "Sports Bottles",
-          "Hydration Accessories",
         ],
       },
 

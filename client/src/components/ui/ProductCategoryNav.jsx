@@ -1,63 +1,55 @@
 import React from 'react'
-import { useParams } from 'react-router-dom'
-import allproducts from "../../data/allProducts"
 
+/**
+ * ProductCategoryNav
+ *
+ * Props:
+ *   products        — full product array from MongoDB
+ *   activeCategory  — currently selected category (null = All)
+ *   onSelectCategory — callback(category | null) — lifted to ProductListingPage
+ */
+function ProductCategoryNav({ products, activeCategory, onSelectCategory }) {
+  const categories = [
+    ...new Set(
+      products
+        .map((product) => product.category)
+        .filter(Boolean)
+    )
+  ]
 
-function ProductCategoryNav() {
-  const {sport} = useParams()
+  const btnBase = `
+    font-nav
+    text-[16px]
+    font-medium
+    whitespace-nowrap
+    pb-4
+    uppercase
+    border-b-2
+    transition-colors
+    duration-200
+  `
 
-  const filteredProducts = allproducts.filter((product) => (
-    product.sport.toLowerCase() === sport.toLowerCase()
-  ))
+  const activeStyle  = "text-black border-black"
+  const inactiveStyle = "text-gray-500 border-transparent hover:text-black hover:border-gray-400"
 
-
-  const categories =[...new Set(filteredProducts.map((product) => product.category))]
-  console.log(categories);
-  
  return (
   <div className="ml-10 mt-5 border-b border-gray-200">
     <div className="flex gap-10 overflow-x-auto px-4 sm:px-0 scrollbar-hide">
 
       {/* All */}
       <button
-          className="
-            font-nav
-            text-[16px]
-            font-medium
-            whitespace-nowrap
-            pb-4
-            uppercase
-            text-gray-500
-            border-b-2
-            border-transparent
-            transition-colors
-            duration-200
-            hover:text-black
-            hover:border-gray-400
-          "
+        onClick={() => onSelectCategory(null)}
+        className={`${btnBase} ${activeCategory === null ? activeStyle : inactiveStyle}`}
       >
         All
       </button>
 
-      {/* Categories */}
+      {/* Category chips */}
       {categories.map((category) => (
         <button
           key={category}
-          className="
-            font-nav
-            text-[16px]
-            font-medium
-            whitespace-nowrap
-            pb-4
-            uppercase
-            text-gray-500
-            border-b-2
-            border-transparent
-            transition-colors
-            duration-200
-            hover:text-black
-            hover:border-gray-400
-          "
+          onClick={() => onSelectCategory(category)}
+          className={`${btnBase} ${activeCategory === category ? activeStyle : inactiveStyle}`}
         >
           {category}
         </button>

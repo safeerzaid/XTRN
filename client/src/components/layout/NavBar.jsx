@@ -2,6 +2,7 @@ import MegaMenu from "../ui/MegaMenu";
 import navigationData from "../../data/Navigation";
 
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiHeart,
   FiShoppingBag,
@@ -18,6 +19,7 @@ import logo from "../../assets/images/logo/logo.png";
 
 const Navbar = () => {
   const navItems = ["MEN", "WOMEN", "SPORTS", "ACCESSORIES", "SALE"];
+  const navigate = useNavigate();
 
   const [active, setActive] = useState(null);
   const [searchValue, setSearchValue] = useState("");
@@ -619,9 +621,18 @@ const Navbar = () => {
                 if (menuItem.children) {
                   openSubMenu(menuItem.label);
                 } else {
-                  // Leaf item — routing placeholder
-                  // TODO: swap console.log for navigate() once React Router is added
-                  console.log("Navigate to:", [...menuPath, menuItem.label].join(" › "));
+                  // Leaf item — build the correct URL based on the top-level nav key
+                  const topKey = menuPath[0]?.toLowerCase(); // 'men','women','sports','accessories'
+                  const item   = menuItem.label;
+                  if (topKey === "sports") {
+                    navigate(`/products/${item.toLowerCase()}`);
+                  } else if (topKey === "men") {
+                    navigate(`/men/${item}`);
+                  } else if (topKey === "women") {
+                    navigate(`/women/${item}`);
+                  } else if (topKey === "accessories") {
+                    navigate(`/accessories/${item}`);
+                  }
                   closeMenu();
                 }
               }}
@@ -1027,7 +1038,10 @@ const Navbar = () => {
 
 
             {active && navigationData[active.toLowerCase()] && (
-  <MegaMenu data={navigationData[active.toLowerCase()]} />
+  <MegaMenu
+    data={navigationData[active.toLowerCase()]}
+    navKey={active.toLowerCase()}
+  />
 )}
 
 
