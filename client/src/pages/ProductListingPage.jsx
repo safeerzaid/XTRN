@@ -209,21 +209,13 @@ function ProductListingPage({ pageType = "sport" }) {
           </FilterSection>
 
           {/* ── Size filter ──────────────────────────────────────────── */}
-          {/*
-            sizeOptions uses flatMap because each product has an array of sizes.
-            We flatten all size arrays, then deduplicate with Set.
-            A product passes the filter if it has ANY of the selected sizes
-            (i.e. "show me shoes that come in US 9 OR US 10").
-          */}
+      
           {sizeOptions.length > 0 && (
             <FilterSection
               title="Size"
               activeCount={selectedSizes.size}
             >
-              {/*
-                Wrapping buttons in a flex-wrap grid lets you display sizes
-                as pill buttons — cleaner UX than a long checkbox list.
-              */}
+        
               <div className="flex flex-wrap gap-2">
                 {sizeOptions.map((size) => (
                   <button
@@ -244,7 +236,7 @@ function ProductListingPage({ pageType = "sport" }) {
         </aside>
 
         {/* ── Product grid ────────────────────────────────────────────── */}
-        <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-10 px-4 py-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:px-10">
+        <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-10 px-4 py-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 lg:px-10">
           {sortedProducts.map((product) => (
             <ProductListCard
               key={product._id}

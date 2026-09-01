@@ -1,75 +1,226 @@
-import React from 'react'
-import { FiHeart } from "react-icons/fi"
+import React from "react";
+import {
+  FiHeart,
+  FiShoppingBag,
+} from "react-icons/fi";
 
-/**
- * ProductListCard
- *
- * Props:
- *   product  — MongoDB product document
- *   pageType — 'sport' | 'men' | 'women' | 'accessories'
- *              Used to select the right image variant:
- *                men page   → images.men[0]   fallback images.default[0]
- *                women page → images.women[0] fallback images.default[0]
- *                everything else → images.default[0]
- */
+
 function ProductListCard({ product, pageType = "sport" }) {
 
-  // Pick the most relevant image based on the page the card is shown on
+  // --------------------------------
+  // GET PRODUCT IMAGE
+  // --------------------------------
+
   const getImage = () => {
-    const imgs = product.images
-    if (!imgs) return undefined
+    const imgs = product.images;
+
+    if (!imgs) {
+      return undefined;
+    }
 
     if (pageType === "men") {
-      return imgs.men?.[0] || imgs.default?.[0]
+      return imgs.men?.[0] || imgs.default?.[0];
     }
-    if (pageType === "women") {
-      return imgs.women?.[0] || imgs.default?.[0]
-    }
-    // sport / accessories / default
-    return imgs.default?.[0]
-  }
 
-  const imageSrc = getImage()
+    if (pageType === "women") {
+      return imgs.women?.[0] || imgs.default?.[0];
+    }
+
+    return imgs.default?.[0];
+  };
+
+
+  // --------------------------------
+  // IMAGE URL
+  // --------------------------------
+
+  const imageSrc = getImage();
+
+
+  // --------------------------------
+  // FORMAT PRICE
+  // --------------------------------
+
+  const formatPrice = (price) => {
+
+    if (price == null) {
+      return "—";
+    }
+
+    return `₹${price.toLocaleString("en-IN")}`;
+  };
+
+
+  // --------------------------------
+  // CARD UI
+  // --------------------------------
 
   return (
-    <div className="group cursor-pointer">
-      <div className="relative aspect-square">
-        <img
-          src={imageSrc}
-          alt={product.name}
-          className="h-full w-full object-contain p-8"
-        />
 
-        {/* Heart */}
-        <button
-          className="absolute right-4 top-4"
-          aria-label="Add to wishlist"
+    <div className="group">
+
+      {/* CARD */}
+
+      <div
+        className="
+          relative
+          overflow-hidden
+          rounded-1xl
+          bg-white
+        "
+      >
+
+        {/* IMAGE AREA */}
+
+        <div
+          className="
+            relative
+            aspect-[270/270]
+            bg-gray-200
+          "
         >
-          <FiHeart
-            size={21}
-            strokeWidth={1.5}
+
+          {/* BADGE */}
+
+          {product.badge && (
+
+            <span
+              className="
+                absolute
+                left-3
+                top-3
+                z-10
+                rounded-md
+                bg-purple-100
+                px-2
+                py-1
+                text-[9px]
+                font-semibold
+                uppercase
+                tracking-wide
+                text-purple-700
+              "
+            >
+              {product.badge}
+            </span>
+
+          )}
+
+
+          {/* HEART */}
+
+          <button
+            type="button"
+            aria-label="Add to wishlist"
+            className="
+              absolute
+              right-3
+              top-3
+              z-10
+              flex
+              h-8
+              w-8
+              items-center
+              justify-center
+              rounded-full
+              bg-white
+              shadow-sm
+              transition
+              duration-200
+              hover:scale-105
+            "
+          >
+
+            <FiHeart
+              size={17}
+              strokeWidth={1.5}
+            />
+
+          </button>
+
+
+          {/* PRODUCT IMAGE */}
+
+          <img
+            src={imageSrc}
+            alt={product.name}
+            className="
+             absolute
+             inset-0
+             h-full
+             w-full
+             object-contain
+            "
           />
-        </button>
 
-      </div>
+        </div>
 
-      {/* Product Info */}
-      <div className="mt-3 flex items-start justify-between gap-4">
 
-        <h3 className="font-nav text-[15px] font-medium">
-          {product.name}
-        </h3>
+        {/* PRODUCT INFORMATION */}
 
-        <p className="font-nav text-[15px] font-medium whitespace-nowrap">
-          {product.price != null
-            ? `₹${product.price.toLocaleString("en-IN")}`
-            : "—"}
-        </p>
+        <div className="p-4">
 
-      </div>
+          {/* PRODUCT NAME */}
 
-    </div>
-  )
+          <h3
+            className="
+              text-[17px]
+              font-nav
+              font-medium
+              mb-1
+              mt-2
+            "
+          >
+            {product.name}
+          </h3>
+
+          <p
+          className="
+          text-gray-600
+          font-nav 
+          text-[16px]
+          "
+          >{product.description}
+          </p>
+
+
+            {/* PRICES */}
+
+              <p
+                className="
+                  font-semibold
+                  text-gray-900
+                  font-nav
+                  mt-4
+                "
+              >
+                {formatPrice(product.price)}
+              </p>
+
+
+              {/* ORIGINAL PRICE */}
+
+              {product.originalPrice != null && (
+
+                <p
+                  className="
+                    text-xs
+                    text-gray-400
+                    line-through
+                  "
+                >
+                  {formatPrice(product.originalPrice)}
+                </p>
+
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+  );
 }
 
-export default ProductListCard
+
+export default ProductListCard;
