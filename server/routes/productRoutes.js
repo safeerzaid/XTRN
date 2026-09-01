@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   try {
     const { sport, department, category, section, subcategory } = req.query
     const filter = {}
-    if (sport)       filter.sport       = sport
+    if (sport)       filter.sport       = { $regex: new RegExp(`^${sport}$`, 'i') }
     if (department)  filter.department  = department
     if (category)    filter.category    = category
     if (section)     filter.section     = section

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { FiSliders, FiChevronDown, FiX } from "react-icons/fi";
 
 import ProductListingHeader from "../components/ui/ProductListingHeader";
 import ProductCategoryNav from "../components/ui/ProductCategoryNav";
@@ -7,21 +8,17 @@ import ProductListCard from "../components/ui/ProductListCard";
 import FilterSection from "../components/ui/FilterSection";
 
 /**
- * Generic product listing page.
+ * ProductListingPage — fully responsive.
  *
- * Works for four route shapes:
- *   /products/:sport          → fetches ?sport=<sport>
- *   /men/:category            → fetches ?department=men&category=<category>
- *   /women/:category          → fetches ?department=women&category=<category>
- *   /accessories/:category    → fetches ?department=accessories&category=<category>
- *
- * The page type is determined by the `pageType` prop passed from App.jsx.
- * pageType: 'sport' | 'men' | 'women' | 'accessories'
+ * Desktop (lg+): sidebar with accordion filters, 3-col grid.
+ * Mobile/tablet:
+ *   - 2-col product grid
+ *   - Subcategory nav hidden
+ *   - Filter bar above grid: [Filter icon] [Price ▾] [Size ▾]
+ *   - Filter icon opens a slide-up drawer with Price + Size accordions
  */
 function ProductListingPage({ pageType = "sport" }) {
   const params = useParams();
-
-  // Derive the display label and fetch URL from route params + pageType
   const sport    = params.sport;
   const category = params.category;
 
@@ -31,25 +28,33 @@ function ProductListingPage({ pageType = "sport" }) {
   const [activeCategory, setActiveCategory] = useState(null);
 
   // ── Filter state ──────────────────────────────────────────────────────────
-  // Each piece of state tracks what the user has selected in that filter section.
-
-  // sortBy: "default" | "price-asc" | "price-desc"
-  const [sortBy, setSortBy] = useState("default");
-
-  // selectedSizes: a Set of size strings (e.g. "US 10", "EU 42")
+  const [sortBy, setSortBy]               = useState("default");
   const [selectedSizes, setSelectedSizes] = useState(new Set());
 
-  // Build the API query string based on page type
+  // ── Mobile filter UI state ────────────────────────────────────────────────
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [priceOpen, setPriceOpen]   = useState(false);
+  const [sizeOpen, setSizeOpen]     = useState(false);
+
+  const priceRef = useRef(null);
+  const sizeRef  = useRef(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (priceRef.current && !priceRef.current.contains(e.target)) setPriceOpen(false);
+      if (sizeRef.current  && !sizeRef.current.contains(e.target))  setSizeOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Build API URL
   const buildUrl = () => {
     const base = "http://localhost:5000/api/products";
-    if (pageType === "sport") {
-      return `${base}?sport=${sport}`;
-    }
-    // men / women / accessories
-    const dept = pageType; // 'men', 'women', 'accessories'
-    if (category) {
-      return `${base}?department=${dept}&category=${category}`;
-    }
+    if (pageType === "sport") return `${base}?sport=${sport}`;
+    const dept = pageType;
+    if (category) return `${base}?department=${dept}&category=${category}`;
     return `${base}?department=${dept}`;
   };
 
@@ -58,23 +63,13 @@ function ProductListingPage({ pageType = "sport" }) {
       try {
         setLoading(true);
         setError("");
-        setActiveCategory(null); // reset filter on route change
-
+        setActiveCategory(null);
         const response = await fetch(buildUrl());
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-
+        if (!response.ok) throw new Error("Failed to fetch products");
         const data = await response.json();
         setProducts(data);
-
-        // Reset sort on route change
         setSortBy("default");
-
-        // Reset all user-chosen filters when the route changes
         setSelectedSizes(new Set());
-        setSortBy("default");
       } catch (err) {
         console.error("Error fetching products:", err);
         setError("Failed to load products");
@@ -82,19 +77,14 @@ function ProductListingPage({ pageType = "sport" }) {
         setLoading(false);
       }
     };
-
     fetchProducts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sport, category, pageType]);
 
-  // ── Derive dynamic filter option lists from the fetched products ──────────
-
-  // Unique sizes — products.sizes is an array, so we flatMap to get every
-  // individual size across all products, then deduplicate.
+  // ── Derived filter options ────────────────────────────────────────────────
   const sizeOptions = [...new Set(products.flatMap((p) => p.sizes || []))].sort();
 
   // ── Toggle helpers ────────────────────────────────────────────────────────
-
   const toggleSize = (size) => {
     setSelectedSizes((prev) => {
       const next = new Set(prev);
@@ -103,45 +93,32 @@ function ProductListingPage({ pageType = "sport" }) {
     });
   };
 
-  // ── Clear all filters ─────────────────────────────────────────────────────
   const clearAllFilters = () => {
     setSelectedSizes(new Set());
     setSortBy("default");
     setActiveCategory(null);
   };
 
-  // ── In-memory filtering pipeline ──────────────────────────────────────────
-  // All filtering happens here on the already-fetched `products` array.
-  // No additional API calls are made when filters change.
-  // Each filter is applied in sequence; if a filter has no selections it
-  // passes every product through (acts as a no-op).
-
+  // ── In-memory filtering + sorting ────────────────────────────────────────
   let filtered = products;
-
-  // 1. Subcategory filter (from ProductCategoryNav)
-  if (activeCategory) {
-    filtered = filtered.filter((p) => p.category === activeCategory);
-  }
-
-  // 2. Size filter
+  if (activeCategory) filtered = filtered.filter((p) => p.category === activeCategory);
   if (selectedSizes.size > 0) {
-    filtered = filtered.filter((p) =>
-      (p.sizes || []).some((s) => selectedSizes.has(s))
-    );
+    filtered = filtered.filter((p) => (p.sizes || []).some((s) => selectedSizes.has(s)));
   }
-
-  // 3. Sort by price
   const sortedProducts = [...filtered].sort((a, b) => {
     if (sortBy === "price-asc")  return a.price - b.price;
     if (sortBy === "price-desc") return b.price - a.price;
     return 0;
   });
 
-  // Show "Clear all" only when something is actually active
   const hasActiveFilters = selectedSizes.size > 0 || sortBy !== "default";
-
-  // Derive the page heading
   const heading = pageType === "sport" ? sport : category || pageType;
+
+  const priceLabelMap = {
+    default:      "Price",
+    "price-asc":  "Price: Low → High",
+    "price-desc": "Price: High → Low",
+  };
 
   if (loading) {
     return (
@@ -161,30 +138,193 @@ function ProductListingPage({ pageType = "sport" }) {
 
   return (
     <div>
-      {/* Header */}
+      {/* ── Header ───────────────────────────────────────────────────────── */}
       <ProductListingHeader products={sortedProducts} heading={heading} />
 
-      {/* Category navigation */}
-      <ProductCategoryNav
-        products={products}
-        activeCategory={activeCategory}
-        onSelectCategory={setActiveCategory}
-      />
+      {/* ── Subcategory nav — hidden on mobile ───────────────────────────── */}
+      <div className="hidden lg:block">
+        <ProductCategoryNav
+          products={products}
+          activeCategory={activeCategory}
+          onSelectCategory={setActiveCategory}
+        />
+      </div>
 
-      {/* Main layout: sidebar + product grid */}
+      {/* ══════════════════════════════════════════════════════════════════
+          MOBILE FILTER BAR  (hidden on lg+)
+      ══════════════════════════════════════════════════════════════════ */}
+      <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3 lg:hidden">
+
+        {/* Filter icon — opens slide-up drawer */}
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="flex items-center gap-1.5 rounded-full border border-gray-300 px-3 py-1.5 font-nav text-[13px] font-medium text-gray-700 transition hover:border-gray-600"
+        >
+          <FiSliders size={14} />
+          Filters
+        </button>
+
+        {/* Price dropdown */}
+        <div ref={priceRef} className="relative">
+          <button
+            onClick={() => { setPriceOpen((v) => !v); setSizeOpen(false); }}
+            className={`flex items-center gap-1 rounded-full border px-3 py-1.5 font-nav text-[13px] font-medium transition ${
+              sortBy !== "default"
+                ? "border-gray-900 bg-gray-900 text-white"
+                : "border-gray-300 text-gray-700 hover:border-gray-600"
+            }`}
+          >
+            {priceLabelMap[sortBy]}
+            <FiChevronDown size={13} className={`transition-transform ${priceOpen ? "rotate-180" : ""}`} />
+          </button>
+          {priceOpen && (
+            <div className="absolute left-0 top-full z-30 mt-1 min-w-[160px] rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+              {[
+                { value: "default",    label: "Default" },
+                { value: "price-asc",  label: "Low → High" },
+                { value: "price-desc", label: "High → Low" },
+              ].map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => { setSortBy(value); setPriceOpen(false); }}
+                  className={`block w-full px-4 py-2 text-left font-nav text-[14px] transition hover:bg-gray-50 ${
+                    sortBy === value ? "font-semibold text-gray-900" : "text-gray-600"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Size dropdown */}
+        {sizeOptions.length > 0 && (
+          <div ref={sizeRef} className="relative">
+            <button
+              onClick={() => { setSizeOpen((v) => !v); setPriceOpen(false); }}
+              className={`flex items-center gap-1 rounded-full border px-3 py-1.5 font-nav text-[13px] font-medium transition ${
+                selectedSizes.size > 0
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-300 text-gray-700 hover:border-gray-600"
+              }`}
+            >
+              {selectedSizes.size > 0 ? `Size (${selectedSizes.size})` : "Size"}
+              <FiChevronDown size={13} className={`transition-transform ${sizeOpen ? "rotate-180" : ""}`} />
+            </button>
+            {sizeOpen && (
+              <div className="absolute left-0 top-full z-30 mt-1 min-w-[180px] rounded-xl border border-gray-200 bg-white p-3 shadow-lg">
+                <div className="flex flex-wrap gap-2">
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => toggleSize(size)}
+                      className={`rounded border px-3 py-1.5 font-nav text-[13px] transition ${
+                        selectedSizes.has(size)
+                          ? "border-gray-900 bg-gray-900 text-white"
+                          : "border-gray-300 text-gray-700 hover:border-gray-600"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Clear all */}
+        {hasActiveFilters && (
+          <button
+            onClick={clearAllFilters}
+            className="ml-auto flex items-center gap-1 font-nav text-[13px] text-gray-500 underline underline-offset-2"
+          >
+            <FiX size={13} />
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SLIDE-UP FILTER DRAWER  (mobile only)
+      ══════════════════════════════════════════════════════════════════ */}
+      {/* Backdrop */}
+      <div
+        onClick={() => setDrawerOpen(false)}
+        className={`fixed inset-0 z-40 bg-black/40 transition-opacity lg:hidden ${
+          drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
+      {/* Drawer panel */}
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-white px-5 pb-8 pt-4 shadow-2xl transition-transform duration-300 ease-out lg:hidden ${
+          drawerOpen ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-300" />
+        <div className="flex items-center justify-between mb-4">
+          <span className="font-nav text-[16px] font-semibold">Filters</span>
+          <button onClick={() => setDrawerOpen(false)} className="p-1 text-gray-500">
+            <FiX size={20} />
+          </button>
+        </div>
+        <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
+          <div className="space-y-2">
+            {[
+              { value: "price-asc",  label: "Low to High" },
+              { value: "price-desc", label: "High to Low" },
+            ].map(({ value, label }) => (
+              <label key={value} className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={sortBy === value}
+                  onChange={() => setSortBy(sortBy === value ? "default" : value)}
+                  className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                />
+                <span className="font-nav text-[15px] text-gray-700">{label}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+        {sizeOptions.length > 0 && (
+          <FilterSection title="Size" activeCount={selectedSizes.size}>
+            <div className="flex flex-wrap gap-2">
+              {sizeOptions.map((size) => (
+                <button
+                  key={size}
+                  onClick={() => toggleSize(size)}
+                  className={`rounded border px-3 py-1.5 font-nav text-[13px] transition ${
+                    selectedSizes.has(size)
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-600"
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </FilterSection>
+        )}
+        {hasActiveFilters && (
+          <button
+            onClick={() => { clearAllFilters(); setDrawerOpen(false); }}
+            className="mt-4 w-full rounded-full border border-gray-300 py-2.5 font-nav text-[14px] font-medium text-gray-700 transition hover:bg-gray-50"
+          >
+            Clear all filters
+          </button>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          MAIN LAYOUT
+      ══════════════════════════════════════════════════════════════════ */}
       <div className="flex">
 
-        {/* ── Filter sidebar ─────────────────────────────────────────── */}
-        <aside className="w-64 shrink-0 bg-white px-6 py-8 min-h-screen">
-
-
-          {/* ── Price sort checkboxes ────────────────────────────────── */}
-          <FilterSection
-            title="Price"
-            activeCount={sortBy !== "default" ? 1 : 0}
-          >
+        {/* ── Desktop sidebar (lg+ only) ──────────────────────────────── */}
+        <aside className="hidden w-64 shrink-0 bg-white px-6 py-8 min-h-screen lg:block">
+          <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
             <div className="space-y-2">
-              {/* Low to High — deselects if already active */}
               <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
@@ -194,8 +334,6 @@ function ProductListingPage({ pageType = "sport" }) {
                 />
                 <span className="font-nav text-[16px] text-gray-700">Low to High</span>
               </label>
-
-              {/* High to Low — deselects if already active */}
               <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
@@ -208,14 +346,8 @@ function ProductListingPage({ pageType = "sport" }) {
             </div>
           </FilterSection>
 
-          {/* ── Size filter ──────────────────────────────────────────── */}
-      
           {sizeOptions.length > 0 && (
-            <FilterSection
-              title="Size"
-              activeCount={selectedSizes.size}
-            >
-        
+            <FilterSection title="Size" activeCount={selectedSizes.size}>
               <div className="flex flex-wrap gap-2">
                 {sizeOptions.map((size) => (
                   <button
@@ -235,8 +367,9 @@ function ProductListingPage({ pageType = "sport" }) {
           )}
         </aside>
 
-        {/* ── Product grid ────────────────────────────────────────────── */}
-        <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-10 px-4 py-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 lg:px-10">
+        {/* ── Product grid ─────────────────────────────────────────────── */}
+        {/* 2-col on mobile/tablet, 3-col on desktop */}
+        <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-8 px-3 py-6 sm:gap-x-4 sm:gap-y-10 sm:px-4 md:px-6 lg:grid-cols-3 lg:gap-x-4 lg:px-10 lg:py-8">
           {sortedProducts.map((product) => (
             <ProductListCard
               key={product._id}
@@ -247,7 +380,7 @@ function ProductListingPage({ pageType = "sport" }) {
         </div>
       </div>
 
-      {/* Empty state — shown when filters produce zero results */}
+      {/* Empty state */}
       {sortedProducts.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
           <p className="font-nav text-gray-500">No products match your filters.</p>

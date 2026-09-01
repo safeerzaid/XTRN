@@ -28,13 +28,15 @@ const productSchema = new mongoose.Schema({
     type: String,
     enum: ['men', 'women', 'unisex'],
     required: true,
+    set: v => v?.toLowerCase()
   },
 
   // CHANGED: array instead of single string
   department: [{
     type: String,
     enum: ['men', 'women', 'sports', 'accessories'],
-    required: true
+    required: true,
+    set: v => v?.toLowerCase()
   }],
 
   section: {
