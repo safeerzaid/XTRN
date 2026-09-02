@@ -25,8 +25,9 @@ const navigationData = {
       {
         title: "FOOTWEAR",
         items: [
-          "Sports Shoes",
-          "Casual Shoes",
+          { label: "Running Shoes", filterBy: "subcategory" },
+          { label: "Casual Shoes",  filterBy: "category" },
+          { label: "Hiking Shoes",  filterBy: "subcategory" },
         ],
       },
 
@@ -59,7 +60,6 @@ const navigationData = {
         title: "BOTTOM WEAR",
         items: [
           "Shorts",
-          "Leggings",
           "Track Pants",
         ],
       },
@@ -67,8 +67,9 @@ const navigationData = {
       {
         title: "FOOTWEAR",
         items: [
-          "Sports Shoes",
-          "Casual Shoes",
+          { label: "Running Shoes", filterBy: "subcategory" },
+          { label: "Casual Shoes",  filterBy: "category" },
+          { label: "Hiking Shoes",  filterBy: "subcategory" },
         ],
       },
 
@@ -175,7 +176,6 @@ const navigationData = {
         title: "SUN & EYEWEAR",
         items: [
           "Sunglasses",
-          "Sports Sunglasses",
         ],
       },
     ],

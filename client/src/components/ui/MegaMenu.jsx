@@ -24,15 +24,18 @@ function MegaMenu({ data, navKey }) {
   const handleItemClick = (item) => {
     if (!navKey) return;
 
+    // item can be a plain string or { label, filterBy } object
+    const label    = typeof item === "string" ? item : item.label;
+    const filterBy = typeof item === "string" ? "category" : item.filterBy;
+
     if (navKey === "sports") {
-      // Sports items are sport names — lowercase them to match the route param
-      navigate(`/products/${item.toLowerCase()}`);
+      navigate(`/products/${label.toLowerCase()}`);
     } else if (navKey === "men") {
-      navigate(`/men/${item}`);
+      navigate(`/men/${encodeURIComponent(label)}?filterBy=${filterBy}`);
     } else if (navKey === "women") {
-      navigate(`/women/${item}`);
+      navigate(`/women/${encodeURIComponent(label)}?filterBy=${filterBy}`);
     } else if (navKey === "accessories") {
-      navigate(`/accessories/${item}`);
+      navigate(`/accessories/${encodeURIComponent(label)}`);
     }
   };
 
@@ -55,15 +58,18 @@ function MegaMenu({ data, navKey }) {
                 </h3>
 
                 <div className="flex flex-col gap-3 text-left">
-                  {section.items.map((item) => (
-                    <button
-                      key={item}
-                      onClick={() => handleItemClick(item)}
-                      className="cursor-pointer text-left text-[18px] leading-tight text-gray-500 transition-colors duration-200 hover:text-black"
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  {section.items.map((item) => {
+                    const label = typeof item === "string" ? item : item.label;
+                    return (
+                      <button
+                        key={label}
+                        onClick={() => handleItemClick(item)}
+                        className="cursor-pointer text-left text-[18px] leading-tight text-gray-500 transition-colors duration-200 hover:text-black"
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
 
               </div>

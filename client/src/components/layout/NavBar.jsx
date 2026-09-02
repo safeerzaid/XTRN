@@ -18,7 +18,7 @@ import gsap from "gsap";
 import logo from "../../assets/images/logo/logo.png";
 
 const Navbar = () => {
-  const navItems = ["MEN", "WOMEN", "SPORTS", "ACCESSORIES", "SALE"];
+  const navItems = ["MEN", "WOMEN", "ACCESSORIES", "SALE"];
   const navigate = useNavigate();
 
   const [active, setActive] = useState(null);

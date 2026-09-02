@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { FiSliders, FiChevronDown, FiX } from "react-icons/fi";
 
 import ProductListingHeader from "../components/ui/ProductListingHeader";
@@ -19,8 +19,12 @@ import FilterSection from "../components/ui/FilterSection";
  */
 function ProductListingPage({ pageType = "sport" }) {
   const params = useParams();
+  const location = useLocation();
   const sport    = params.sport;
   const category = params.category;
+  // ?filterBy tells us which DB field to filter on (category | section | subcategory)
+  // Defaults to 'category' so all existing clothing nav items keep working unchanged
+  const filterBy = new URLSearchParams(location.search).get("filterBy") || "category";
 
   const [products, setProducts]   = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -54,7 +58,7 @@ function ProductListingPage({ pageType = "sport" }) {
     const base = "http://localhost:5000/api/products";
     if (pageType === "sport") return `${base}?sport=${sport}`;
     const dept = pageType;
-    if (category) return `${base}?department=${dept}&category=${category}`;
+    if (category) return `${base}?department=${dept}&${filterBy}=${encodeURIComponent(category)}`;
     return `${base}?department=${dept}`;
   };
 
@@ -79,7 +83,7 @@ function ProductListingPage({ pageType = "sport" }) {
     };
     fetchProducts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sport, category, pageType]);
+  }, [sport, category, pageType, filterBy]);
 
   // ── Derived filter options ────────────────────────────────────────────────
   const sizeOptions = [...new Set(products.flatMap((p) => p.sizes || []))].sort();
