@@ -164,7 +164,7 @@ function ProductListCard({ product, pageType = "sport" }) {
 
           <h3
             className="
-              text-[17px]
+              text-[14px]
               font-nav
               font-medium
               mb-1
@@ -176,6 +176,7 @@ function ProductListCard({ product, pageType = "sport" }) {
 
           <p
           className="
+          hidden lg:block
           text-gray-600
           font-nav 
           text-[16px]
@@ -191,7 +192,8 @@ function ProductListCard({ product, pageType = "sport" }) {
                   font-semibold
                   text-gray-900
                   font-nav
-                  mt-4
+                  text-[14px]
+                  mt-2
                 "
               >
                 {formatPrice(product.price)}

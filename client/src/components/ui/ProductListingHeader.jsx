@@ -16,31 +16,6 @@ function ProductListingHeader({ products, heading = "" }) {
   return (
     <header className="px-4 pt-8 pb-8 sm:px-6 md:px-10 lg:px-14">
 
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 font-nav text-xs uppercase tracking-wide text-gray-500">
-
-        <span className="cursor-pointer transition-colors duration-200 hover:text-black">
-          Home
-        </span>
-
-        <span className="text-gray-300">
-          /
-        </span>
-
-        <span className="cursor-pointer transition-colors duration-200 hover:text-black">
-          Products
-        </span>
-
-        <span className="text-gray-300">
-          /
-        </span>
-
-        <span className="text-black">
-          {formattedHeading}
-        </span>
-
-      </div>
-
       {/* Main heading */}
       <div className="mt-8 flex items-end justify-between pb-6">
 

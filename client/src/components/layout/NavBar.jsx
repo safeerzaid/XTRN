@@ -667,6 +667,7 @@ const Navbar = () => {
             touchAction: "manipulation",
           }}
         >
+
           {/* Hamburger */}
           <div className="flex-1 flex items-center">
             <button
@@ -684,7 +685,6 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* Center Logo */}
           <div
             ref={mobileNavbarLogoRef}
             className="absolute inset-0 flex items-center justify-center pointer-events-none"

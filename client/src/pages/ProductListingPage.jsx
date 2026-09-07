@@ -53,9 +53,10 @@ function ProductListingPage({ pageType = "sport" }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Build API URL
+  // Build API URL using a relative path so it works from any device on the
+  // network. The Vite dev server proxies /api → http://localhost:5000.
   const buildUrl = () => {
-    const base = "http://localhost:5000/api/products";
+    const base = "/api/products";
     if (pageType === "sport") return `${base}?sport=${sport}`;
     const dept = pageType;
     if (category) return `${base}?department=${dept}&${filterBy}=${encodeURIComponent(category)}`;
@@ -64,19 +65,26 @@ function ProductListingPage({ pageType = "sport" }) {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      const url = buildUrl();
       try {
         setLoading(true);
         setError("");
         setActiveCategory(null);
-        const response = await fetch(buildUrl());
-        if (!response.ok) throw new Error("Failed to fetch products");
+        console.log("[ProductListingPage] Fetching products from:", url);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(
+            `Server responded with ${response.status} ${response.statusText} for ${url}`
+          );
+        }
         const data = await response.json();
+        console.log("[ProductListingPage] Loaded", data.length, "products");
         setProducts(data);
         setSortBy("default");
         setSelectedSizes(new Set());
       } catch (err) {
-        console.error("Error fetching products:", err);
-        setError("Failed to load products");
+        console.error("[ProductListingPage] Error fetching products from", url, err);
+        setError("Failed to load products. Please check your connection.");
       } finally {
         setLoading(false);
       }
@@ -116,6 +124,7 @@ function ProductListingPage({ pageType = "sport" }) {
   });
 
   const hasActiveFilters = selectedSizes.size > 0 || sortBy !== "default";
+  const activeFilterCount = (sortBy !== "default" ? 1 : 0); // size has its own button
   const heading = pageType === "sport" ? sport : category || pageType;
 
   const priceLabelMap = {
@@ -159,15 +168,6 @@ function ProductListingPage({ pageType = "sport" }) {
       ══════════════════════════════════════════════════════════════════ */}
       <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3 lg:hidden">
 
-        {/* Filter icon — opens slide-up drawer */}
-        <button
-          onClick={() => setDrawerOpen(true)}
-          className="flex items-center gap-1.5 rounded-full border border-gray-300 px-3 py-1.5 font-nav text-[13px] font-medium text-gray-700 transition hover:border-gray-600"
-        >
-          <FiSliders size={14} />
-          Filters
-        </button>
-
         {/* Price dropdown */}
         <div ref={priceRef} className="relative">
           <button
@@ -178,35 +178,36 @@ function ProductListingPage({ pageType = "sport" }) {
                 : "border-gray-300 text-gray-700 hover:border-gray-600"
             }`}
           >
-            {priceLabelMap[sortBy]}
+            {sortBy === "price-asc" ? "Price: Low → High" : sortBy === "price-desc" ? "Price: High → Low" : "Price"}
             <FiChevronDown size={13} className={`transition-transform ${priceOpen ? "rotate-180" : ""}`} />
           </button>
           {priceOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 min-w-[160px] rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
-              {[
-                { value: "default",    label: "Default" },
-                { value: "price-asc",  label: "Low → High" },
-                { value: "price-desc", label: "High → Low" },
-              ].map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => { setSortBy(value); setPriceOpen(false); }}
-                  className={`block w-full px-4 py-2 text-left font-nav text-[14px] transition hover:bg-gray-50 ${
-                    sortBy === value ? "font-semibold text-gray-900" : "text-gray-600"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="absolute left-0 top-full z-30 mt-1 min-w-[160px] rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+              <div className="space-y-2">
+                {[
+                  { value: "price-asc",  label: "Low → High" },
+                  { value: "price-desc", label: "High → Low" },
+                ].map(({ value, label }) => (
+                  <label key={value} className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={sortBy === value}
+                      onChange={() => { setSortBy(sortBy === value ? "default" : value); setPriceOpen(false); }}
+                      className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                    />
+                    <span className="font-nav text-[14px] text-gray-700">{label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Size dropdown */}
+        {/* Size dropdown — separate button */}
         {sizeOptions.length > 0 && (
           <div ref={sizeRef} className="relative">
             <button
-              onClick={() => { setSizeOpen((v) => !v); setPriceOpen(false); }}
+              onClick={() => setSizeOpen((v) => !v)}
               className={`flex items-center gap-1 rounded-full border px-3 py-1.5 font-nav text-[13px] font-medium transition ${
                 selectedSizes.size > 0
                   ? "border-gray-900 bg-gray-900 text-white"
@@ -238,7 +239,7 @@ function ProductListingPage({ pageType = "sport" }) {
           </div>
         )}
 
-        {/* Clear all */}
+        {/* Clear all — only shown when filters are active */}
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
@@ -291,25 +292,6 @@ function ProductListingPage({ pageType = "sport" }) {
             ))}
           </div>
         </FilterSection>
-        {sizeOptions.length > 0 && (
-          <FilterSection title="Size" activeCount={selectedSizes.size}>
-            <div className="flex flex-wrap gap-2">
-              {sizeOptions.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => toggleSize(size)}
-                  className={`rounded border px-3 py-1.5 font-nav text-[13px] transition ${
-                    selectedSizes.has(size)
-                      ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-600"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </FilterSection>
-        )}
         {hasActiveFilters && (
           <button
             onClick={() => { clearAllFilters(); setDrawerOpen(false); }}
