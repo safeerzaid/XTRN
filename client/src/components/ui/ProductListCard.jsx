@@ -3,9 +3,12 @@ import {
   FiHeart,
   FiShoppingBag,
 } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 
 function ProductListCard({ product, pageType = "sport" }) {
+
+
 
   // --------------------------------
   // GET PRODUCT IMAGE
@@ -57,7 +60,9 @@ function ProductListCard({ product, pageType = "sport" }) {
 
   return (
 
-    <div className="group">
+    <Link to={`/product/${product._id}`}>
+
+    <div className="group cursor-pointer">
 
       {/* CARD */}
 
@@ -221,6 +226,9 @@ function ProductListCard({ product, pageType = "sport" }) {
           </div>
 
         </div>
+  </Link>
+
+
   );
 }
 

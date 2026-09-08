@@ -4,7 +4,6 @@ import navigationData from "../../data/Navigation";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FiHeart,
   FiShoppingBag,
   FiSearch,
   FiMenu,
@@ -81,6 +80,15 @@ const Navbar = () => {
   ───────────────────────────────────────────── */
 
   const toggleMenu = () => setMenuOpen((prev) => !prev);
+
+  const scrollToHero = () => {
+    const hero = document.getElementById("hero");
+    if (hero) {
+      hero.scrollIntoView({ behavior: "smooth" });
+    } else {
+      navigate("/");
+    }
+  };
 
   // closeMenu hides the overlay immediately, then resets the path AFTER
   // the CSS close animation finishes (0.45s transition + small buffer = 500ms).
@@ -689,12 +697,19 @@ const Navbar = () => {
             ref={mobileNavbarLogoRef}
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
-            <img
-              src={logo}
-              alt="NRGY Logo"
-              className="w-[72px] h-auto pointer-events-auto cursor-pointer select-none"
-              draggable="false"
-            />
+            <button
+              type="button"
+              onClick={scrollToHero}
+              className="pointer-events-auto p-0 bg-transparent border-none outline-none"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <img
+                src={logo}
+                alt="NRGY Logo"
+                className="w-[72px] h-auto cursor-pointer select-none"
+                draggable="false"
+              />
+            </button>
           </div>
 
           {/* Mobile Search */}
@@ -779,12 +794,19 @@ const Navbar = () => {
             ref={tabletNavbarLogoRef}
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
-            <img
-              src={logo}
-              alt="NRGY Logo"
-              className="w-[80px] h-auto pointer-events-auto cursor-pointer"
-              draggable="false"
-            />
+            <button
+              type="button"
+              onClick={scrollToHero}
+              className="pointer-events-auto p-0 bg-transparent border-none outline-none"
+              style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+              <img
+                src={logo}
+                alt="NRGY Logo"
+                className="w-[80px] h-auto cursor-pointer"
+                draggable="false"
+              />
+            </button>
           </div>
 
           {/* Tablet Search */}
@@ -824,9 +846,7 @@ const Navbar = () => {
               )}
             </button>
 
-            <button type="button" className="transition-all duration-300 hover:scale-110">
-              <FiHeart size={20} strokeWidth={1.5} />
-            </button>
+
 
             <button type="button" className="transition-all duration-300 hover:scale-110">
               <FiShoppingBag size={20} strokeWidth={1.5} />
@@ -860,6 +880,7 @@ const Navbar = () => {
             <img
               src={logo}
               alt="NRGY Logo"
+              onClick={scrollToHero}
               className="w-[65px] h-auto cursor-pointer select-none"
               draggable="false"
             />
@@ -922,14 +943,7 @@ const Navbar = () => {
               {desktopSearchOpen ? <FiX size={20} /> : <FiSearch size={20} />}
             </button>
 
-            <button
-              ref={(el) => { desktopIconRefs.current[1] = el; }}
-              type="button"
-              className="transition-all duration-300 hover:scale-110"
-              style={{ color: "#ffffff" }}
-            >
-              <FiHeart size={22} strokeWidth={1.5} />
-            </button>
+
 
             <button
               ref={(el) => { desktopIconRefs.current[2] = el; }}
@@ -952,6 +966,7 @@ const Navbar = () => {
             <img
               src={logo}
               alt="NRGY Logo"
+              onClick={scrollToHero}
               className="w-[70px] h-auto cursor-pointer select-none"
               draggable="false"
             />
@@ -1014,14 +1029,7 @@ const Navbar = () => {
               {desktopSearchOpen ? <FiX size={22} /> : <FiSearch size={22} />}
             </button>
 
-            <button
-              ref={(el) => { desktop4kIconRefs.current[1] = el; }}
-              type="button"
-              className="transition-all duration-300 hover:scale-110"
-              style={{ color: "#ffffff" }}
-            >
-              <FiHeart size={24} strokeWidth={1.5} />
-            </button>
+
 
             <button
               ref={(el) => { desktop4kIconRefs.current[2] = el; }}

@@ -7,6 +7,7 @@ function Hero() {
                We use smaller padding and a tighter border-radius on mobile.
     */
     <section
+      id="hero"
       className="
         relative w-full
 

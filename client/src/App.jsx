@@ -2,6 +2,7 @@ import React from 'react'
 import Home from './pages/Home'
 import ProductListingPage from './pages/ProductListingPage'
 import { Route, Routes } from 'react-router-dom'
+import ProductDetailPage from './pages/ProductDetailPage'
 
 function App() {
   return (
@@ -36,6 +37,11 @@ function App() {
         <Route
           path='/accessories/:category'
           element={<ProductListingPage pageType="accessories" />}
+        />
+
+        <Route 
+          path='/product/:id'
+          element ={<ProductDetailPage/>}
         />
 
       </Routes>
