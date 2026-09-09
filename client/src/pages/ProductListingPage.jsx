@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { FiSliders, FiChevronDown, FiX } from "react-icons/fi";
 
+import NavBar from "../components/layout/NavBar";
 import ProductListingHeader from "../components/ui/ProductListingHeader";
 import ProductCategoryNav from "../components/ui/ProductCategoryNav";
 import ProductListCard from "../components/ui/ProductListCard";
@@ -150,7 +151,10 @@ function ProductListingPage({ pageType = "sport" }) {
   }
 
   return (
-    <div>
+    <div className="pt-16 lg:pt-20">
+      {/* ── NavBar — always white on listing page ────────────────────────── */}
+      <NavBar alwaysVisible={true} />
+
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <ProductListingHeader products={sortedProducts} heading={heading} />
 
@@ -305,10 +309,10 @@ function ProductListingPage({ pageType = "sport" }) {
       {/* ══════════════════════════════════════════════════════════════════
           MAIN LAYOUT
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="flex">
+      <div className="flex items-start">
 
         {/* ── Desktop sidebar (lg+ only) ──────────────────────────────── */}
-        <aside className="hidden w-64 shrink-0 bg-white px-6 py-8 min-h-screen lg:block">
+        <aside className="hidden w-64 shrink-0 bg-white px-6 py-8 lg:block sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto">
           <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
             <div className="space-y-2">
               <label className="flex cursor-pointer items-center gap-2">

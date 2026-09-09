@@ -9,6 +9,7 @@ import {
   FiMenu,
   FiUser,
   FiX,
+  FiHeart,
   FiChevronRight,
   FiChevronLeft,
 } from "react-icons/fi";
@@ -16,7 +17,7 @@ import gsap from "gsap";
 
 import logo from "../../assets/images/logo/logo.png";
 
-const Navbar = () => {
+const Navbar = ({ alwaysVisible = false }) => {
   const navItems = ["MEN", "WOMEN", "ACCESSORIES", "SALE"];
   const navigate = useNavigate();
 
@@ -334,6 +335,9 @@ const Navbar = () => {
   ───────────────────────────────────────────── */
 
   useEffect(() => {
+    // When alwaysVisible is true, the navbar stays white; skip scroll tracking.
+    if (alwaysVisible) return;
+
     const handleScroll = () => {
       setDesktopScrolled(window.scrollY > 10);
     };
@@ -345,14 +349,15 @@ const Navbar = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [alwaysVisible]);
 
   /* ─────────────────────────────────────────────
      DESKTOP NAVBAR COLOR — HOVER OR SCROLL
   ───────────────────────────────────────────── */
 
   useEffect(() => {
-    const shouldBeWhite = desktopScrolled || desktopHovered;
+    // alwaysVisible overrides hover/scroll — navbar is permanently white.
+    const shouldBeWhite = alwaysVisible || desktopScrolled || desktopHovered;
 
     const nav = desktopNavRef.current;
     const desktopTexts = desktopTextRefs.current.filter(Boolean);
@@ -372,7 +377,7 @@ const Navbar = () => {
       gsap.to([...desktopIcons, ...desktop4kIcons], { color: "#ffffff", duration: 0.35, ease: "power2.out" });
       gsap.to(logos, { filter: "none", duration: 0.35, ease: "power2.out" });
     }
-  }, [desktopScrolled, desktopHovered]);
+  }, [alwaysVisible, desktopScrolled, desktopHovered]);
 
   /* ─────────────────────────────────────────────
      MOBILE SEARCH
@@ -621,44 +626,50 @@ const Navbar = () => {
           className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 pb-10"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
-          {getCurrentMenuItems().map((menuItem, index) => (
-            <button
+          {getCurrentMenuItems().map((menuItem, index, arr) => (
+            <div
               key={menuItem.label}
-              ref={(el) => { menuItemsRef.current[index] = el; }}
-              onClick={() => {
-                if (menuItem.children) {
-                  openSubMenu(menuItem.label);
-                } else {
-                  // Leaf item — build the correct URL based on the top-level nav key
-                  const topKey = menuPath[0]?.toLowerCase(); // 'men','women','sports','accessories'
-                  const item   = menuItem.label;
-                  if (topKey === "sports") {
-                    navigate(`/products/${item.toLowerCase()}`);
-                  } else if (topKey === "men") {
-                    navigate(`/men/${item}`);
-                  } else if (topKey === "women") {
-                    navigate(`/women/${item}`);
-                  } else if (topKey === "accessories") {
-                    navigate(`/accessories/${item}`);
-                  }
-                  closeMenu();
-                }
-              }}
-              aria-label={menuItem.label}
-              className="flex items-center py-2 text-black outline-none"
+              className="w-full flex justify-center"
               style={{
-                fontFamily: "var(--font-nav)",
-                fontSize: "22px",
-                fontWeight: 600,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                WebkitTapHighlightColor: "transparent",
-                WebkitAppearance: "none",
-                touchAction: "manipulation",
+                borderBottom: index < arr.length - 1 ? "1px solid #e5e7eb" : "none",
               }}
             >
-              {menuItem.label}
-            </button>
+              <button
+                ref={(el) => { menuItemsRef.current[index] = el; }}
+                onClick={() => {
+                  if (menuItem.children) {
+                    openSubMenu(menuItem.label);
+                  } else {
+                    const topKey = menuPath[0]?.toLowerCase();
+                    const item   = menuItem.label;
+                    if (topKey === "sports") {
+                      navigate(`/products/${item.toLowerCase()}`);
+                    } else if (topKey === "men") {
+                      navigate(`/men/${item}`);
+                    } else if (topKey === "women") {
+                      navigate(`/women/${item}`);
+                    } else if (topKey === "accessories") {
+                      navigate(`/accessories/${item}`);
+                    }
+                    closeMenu();
+                  }
+                }}
+                aria-label={menuItem.label}
+                className="flex items-center py-4 text-black outline-none"
+                style={{
+                  fontFamily: "var(--font-nav)",
+                  fontSize: "22px",
+                  fontWeight: 600,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  WebkitTapHighlightColor: "transparent",
+                  WebkitAppearance: "none",
+                  touchAction: "manipulation",
+                }}
+              >
+                {menuItem.label}
+              </button>
+            </div>
           ))}
         </nav>
       </div>
@@ -756,6 +767,19 @@ const Navbar = () => {
 
             <button
               type="button"
+              aria-label="Wishlist"
+              className="flex items-center justify-center p-2 text-black outline-none"
+              style={{
+                WebkitTapHighlightColor: "transparent",
+                WebkitAppearance: "none",
+                touchAction: "manipulation",
+              }}
+            >
+              <FiHeart size={21} strokeWidth={1.7} />
+            </button>
+
+            <button
+              type="button"
               aria-label="Account"
               className="flex items-center justify-center p-2 text-black outline-none"
               style={{
@@ -847,6 +871,14 @@ const Navbar = () => {
             </button>
 
 
+
+            <button
+              type="button"
+              aria-label="Wishlist"
+              className="transition-all duration-300 hover:scale-110"
+            >
+              <FiHeart size={19} strokeWidth={1.7} />
+            </button>
 
             <button type="button" className="transition-all duration-300 hover:scale-110">
               <FiShoppingBag size={20} strokeWidth={1.5} />
@@ -946,6 +978,16 @@ const Navbar = () => {
 
 
             <button
+              ref={(el) => { desktopIconRefs.current[1] = el; }}
+              type="button"
+              aria-label="Wishlist"
+              className="transition-all duration-300 hover:scale-110"
+              style={{ color: "#ffffff" }}
+            >
+              <FiHeart size={20} strokeWidth={1.7} />
+            </button>
+
+            <button
               ref={(el) => { desktopIconRefs.current[2] = el; }}
               type="button"
               className="transition-all duration-300 hover:scale-110"
@@ -1030,6 +1072,16 @@ const Navbar = () => {
             </button>
 
 
+
+            <button
+              ref={(el) => { desktop4kIconRefs.current[1] = el; }}
+              type="button"
+              aria-label="Wishlist"
+              className="transition-all duration-300 hover:scale-110"
+              style={{ color: "#ffffff" }}
+            >
+              <FiHeart size={22} strokeWidth={1.7} />
+            </button>
 
             <button
               ref={(el) => { desktop4kIconRefs.current[2] = el; }}

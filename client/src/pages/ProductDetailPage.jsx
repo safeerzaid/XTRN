@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
+import { FiHeart } from "react-icons/fi";
 import NavBar from "../components/layout/NavBar";
 import ProductListCard from "../components/ui/ProductListCard";
 
@@ -15,12 +16,53 @@ function ProductDetailPage() {
   const { id } = useParams();
 
   useEffect(() => {
-    fetch(`/api/products/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
+    setLoading(true);
+    setProduct(null);
+    setRelatedProducts([]);
+
+    // Fire both requests in parallel — eliminates the waterfall delay
+    Promise.all([
+      fetch(`/api/products/${id}`).then((res) => res.json()),
+      fetch("/api/products").then((res) => res.json()),
+    ])
+      .then(([data, allProducts]) => {
         setProduct(data);
         setSelectedImage(data.images.default[0]);
         setLoading(false);
+
+        // 1. Same subcategory
+        let filtered = allProducts.filter(
+          (item) =>
+            item._id !== id &&
+            item.gender === data.gender &&
+            item.category === data.category &&
+            item.subcategory === data.subcategory
+        );
+
+        // 2. If less than 4, fill with same category
+        if (filtered.length < 4) {
+          const sameCategory = allProducts.filter(
+            (item) =>
+              item._id !== id &&
+              item.gender === data.gender &&
+              item.category === data.category &&
+              !filtered.some((p) => p._id === item._id)
+          );
+          filtered = [...filtered, ...sameCategory];
+        }
+
+        // 3. If still less than 4, fill with same gender
+        if (filtered.length < 4) {
+          const sameGender = allProducts.filter(
+            (item) =>
+              item._id !== id &&
+              item.gender === data.gender &&
+              !filtered.some((p) => p._id === item._id)
+          );
+          filtered = [...filtered, ...sameGender];
+        }
+
+        setRelatedProducts(filtered.slice(0, 4));
       })
       .catch((err) => {
         console.error(err);
@@ -28,67 +70,19 @@ function ProductDetailPage() {
       });
   }, [id]);
 
-    useEffect(() => {
-
-  if (!product) return;
-
-  fetch("/api/products")
-    .then((res) => res.json())
-    .then((data) => {
-
-  // 1. Same subcategory
-  let filtered = data.filter(
-    (item) =>
-      item._id !== id &&
-      item.gender === product.gender &&
-      item.category === product.category &&
-      item.subcategory === product.subcategory
-  );
-
-  // 2. If less than 4, add same category
-  if (filtered.length < 4) {
-    const sameCategory = data.filter(
-      (item) =>
-        item._id !== id &&
-        item.gender === product.gender &&
-        item.category === product.category &&
-        !filtered.some((p) => p._id === item._id)
-    );
-
-    filtered = [...filtered, ...sameCategory];
-  }
-
-  // 3. If still less than 4, add same gender
-  if (filtered.length < 4) {
-    const sameGender = data.filter(
-      (item) =>
-        item._id !== id &&
-        item.gender === product.gender &&
-        !filtered.some((p) => p._id === item._id)
-    );
-
-    filtered = [...filtered, ...sameGender];
-  }
-
-  setRelatedProducts(filtered.slice(0, 4));
-
-    })
-    .catch((err) => console.error(err));
-
-    }, [id, product]);
-
+  if (loading) return null;
   if (!product) return <h2>Product not found.</h2>;
 
   return (
     <div className="min-h-screen bg-white">
 
-      <NavBar />
+      <NavBar alwaysVisible={true}  />
 
       <main className="mx-auto w-full max-w-[1280px] px-3 sm:px-4 md:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-20">
         <div className="flex flex-col lg:flex-row lg:items-start lg:gap-10 xl:gap-14">
 
           {/* ── LEFT: Image Gallery ─────────────────────────────── */}
-          <div className="w-full lg:w-[50%] lg:sticky lg:top-28 flex flex-col lg:flex-row lg:gap-3">
+          <div className="w-full lg:w-[50%] flex flex-col lg:flex-row lg:gap-3">
 
             {/* Thumbnail Strip */}
             <div className="order-2 lg:order-1 flex flex-row lg:flex-col gap-3 mt-3 lg:mt-0 overflow-x-auto lg:overflow-y-auto lg:overflow-x-hidden py-2 lg:pr-2">
@@ -134,116 +128,162 @@ function ProductDetailPage() {
           </div>
 
           {/* ── RIGHT: Product Information ──────────────────────── */}
-          <div className="w-full lg:w-[50%] mt-8 lg:mt-0">
+          <div className="w-full lg:w-[50%] mt-6 lg:mt-0 lg:sticky lg:top-28 lg:self-start">
 
             {/* Name + Price */}
-            <div className="flex flex-col gap-4">
-              <h1 className="text-3xl sm:text-4xl font-semibold text-gray-900 leading-none font-nav">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 leading-tight font-nav">
                 {product.name}
               </h1>
-              <div className="flex items-center gap-">
-                <span className="text-2xl font-semibold text-black font-nav">
+              <div className="flex items-center gap-2">
+                <span className="text-xl sm:text-2xl font-semibold text-black font-nav">
                   ₹{product.price?.toLocaleString("en-IN")}
                 </span>
                 {product.originalPrice && (
-                  <span className="text-gray-400 line-through font-nav">
+                  <span className="text-base text-gray-400 line-through font-nav">
                     ₹{product.originalPrice.toLocaleString("en-IN")}
                   </span>
                 )}
               </div>
             </div>
 
-          <div className="my-6 border-t border-gray-300"></div>
+          <div className="my-4 lg:my-6 border-t border-gray-300"></div>
 
             {/* Description */}
-            <div className="mt-8">
-              <h2 className="text-lg font-semibold text-gray-900 font-nav">Description</h2>
-              <p className="mt-1 text-gray-500 leading-8 font-nav">{product.description}</p>
+            <div className="mt-2 lg:mt-4">
+              <h2 className="text-base lg:text-lg font-semibold text-gray-900 font-nav">Description</h2>
+              <p className="mt-1 text-sm lg:text-base text-gray-500 leading-7 font-nav">{product.description}</p>
             </div>
 
           <div className="flex flex-wrap gap-2 mt-4">
-
-       
-         {product.sizes && product.sizes.length > 0 && (
-  <div className="flex flex-wrap gap-2 mt-4">
-    {product.sizes.map((size) => (
-      <button
-        key={size}
-        type="button"
-        onClick={() => setSelectedSize(size)}
-        className={`
-          w-12
-          h-12
-          rounded-sm
-          border
-          font-nav
-          font-medium
-          transition-all
-          duration-200
-          ${
-            selectedSize === size
-              ? "bg-black text-white border-black"
-              : "border-gray-300 hover:border-black"
-          }
-        `}
-      >
-        {size}
-      </button>
-    ))}
-  </div>
-)}
-
-      </div>
-
-            {/* Quantity & Add to Cart */}
-
-          <div className="mt-8 flex flex-col sm:flex-row gap-4">
-
-            {/* Quantity */}
-
-          <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden">
-
-            <button
-              onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-              className="w-12 h-12 aspect-square flex items-center justify-center font-nav text-xl hover:bg-gray-100 transition cursor-pointer"
-            >
-              −
-            </button>
-
-            <span className="w-12 h-12 aspect-square flex items-center justify-center font-nav font-semibold">
-              {quantity}
-            </span>
-
-            <button
-              onClick={() => setQuantity((prev) => prev + 1)}
-              className="w-10 h-12 aspect-square flex items-center font-nav justify-center text-xl hover:bg-gray-100 transition cursor-pointer"
-            >
-              +
-            </button>
-
+          {product.sizes && product.sizes.length > 1 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {product.sizes.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setSelectedSize(size)}
+                  className={`
+                    w-12 h-12 rounded-sm border font-nav font-medium transition-all duration-200
+                    ${selectedSize === size
+                      ? "bg-black text-white border-black"
+                      : "border-gray-300 hover:border-black"}
+                  `}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          )}
           </div>
 
-            {/* Add to Cart */}
+            {/* ── MOBILE: Quantity + Heart (50/50), then full-width Add to Cart ── */}
+            {/* ── DESKTOP (sm+): all three in one row ── */}
 
-            <button
-              className="
-                font-nav
-                flex-1
-                h-12
-                rounded-xl
-                bg-black
-                text-white
-                font-semibold
-                hover:bg-gray-900
-                transition
-                cursor-pointer
-              "
-            >
-              Add to Cart
-            </button>
+            {/* Row 1 (mobile only): Quantity stepper + Heart button side by side */}
+            <div className="mt-6 flex gap-3 sm:hidden">
+              {/* Quantity — takes half */}
+              <div className="flex flex-1 items-center justify-between border border-gray-300 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  className="flex-1 h-12 flex items-center justify-center font-nav text-xl hover:bg-gray-100 transition cursor-pointer"
+                >
+                  −
+                </button>
+                <span className="w-10 h-12 flex items-center justify-center font-nav font-semibold text-sm">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity((prev) => prev + 1)}
+                  className="flex-1 h-12 flex items-center justify-center font-nav text-xl hover:bg-gray-100 transition cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
 
-          </div>
+              {/* Wishlist — takes half */}
+              <button
+                type="button"
+                aria-label="Add to wishlist"
+                className="
+                  group flex-1 flex items-center justify-center
+                  h-12 rounded-xl
+                  border border-gray-600
+                  hover:border-black
+                  transition-all duration-200 cursor-pointer
+                "
+              >
+                <FiHeart
+                  size={20}
+                  strokeWidth={1.8}
+                  className="text-gray-600 group-hover:text-black group-hover:fill-black transition-all duration-200"
+                />
+              </button>
+            </div>
 
+            {/* Row 2 (mobile only): Full-width Add to Cart */}
+            <div className="mt-3 sm:hidden">
+              <button
+                className="
+                  font-nav w-full h-12 rounded-xl
+                  bg-black text-white font-semibold
+                  hover:bg-gray-900 transition cursor-pointer
+                "
+              >
+                Add to Cart
+              </button>
+            </div>
+
+            {/* Desktop (sm+): Quantity + Add to Cart + Heart in one row */}
+            <div className="hidden sm:flex mt-8 gap-4">
+              {/* Quantity */}
+              <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  className="w-12 h-12 flex items-center justify-center font-nav text-xl hover:bg-gray-100 transition cursor-pointer"
+                >
+                  −
+                </button>
+                <span className="w-12 h-12 flex items-center justify-center font-nav font-semibold">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity((prev) => prev + 1)}
+                  className="w-10 h-12 flex items-center justify-center font-nav text-xl hover:bg-gray-100 transition cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Add to Cart */}
+              <button
+                className="
+                  font-nav flex-1 h-12 rounded-xl
+                  bg-black text-white font-semibold
+                  hover:bg-gray-900 transition cursor-pointer
+                "
+              >
+                Add to Cart
+              </button>
+
+              {/* Wishlist */}
+              <button
+                type="button"
+                aria-label="Add to wishlist"
+                className="
+                  group flex items-center justify-center
+                  w-12 h-12 rounded-xl flex-shrink-0
+                  border border-gray-600 hover:border-black
+                  transition-all duration-200 cursor-pointer
+                "
+              >
+                <FiHeart
+                  size={20}
+                  strokeWidth={1.8}
+                  className="text-gray-600 group-hover:text-black group-hover:fill-black transition-all duration-200"
+                />
+              </button>
+            </div>
 
           </div>
 
