@@ -39,6 +39,12 @@ function App() {
           element={<ProductListingPage pageType="accessories" />}
         />
 
+        {/* Featured Collection — /featured/:subcategory (e.g. /featured/Shoes) */}
+        <Route
+          path='/featured/:subcategory'
+          element={<ProductListingPage pageType="featured" />}
+        />
+
         <Route 
           path='/product/:id'
           element ={<ProductDetailPage/>}

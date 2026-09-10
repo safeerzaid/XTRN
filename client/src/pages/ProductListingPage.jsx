@@ -7,6 +7,8 @@ import ProductListingHeader from "../components/ui/ProductListingHeader";
 import ProductCategoryNav from "../components/ui/ProductCategoryNav";
 import ProductListCard from "../components/ui/ProductListCard";
 import FilterSection from "../components/ui/FilterSection";
+import FeaturedSidebar from "../components/ui/FeaturedSidebar";
+import { useFeaturedFilters } from "../hooks/useFeaturedFilters";
 
 /**
  * ProductListingPage — fully responsive.
@@ -21,8 +23,10 @@ import FilterSection from "../components/ui/FilterSection";
 function ProductListingPage({ pageType = "sport" }) {
   const params = useParams();
   const location = useLocation();
-  const sport    = params.sport;
-  const category = params.category;
+  const sport      = params.sport;
+  const category   = params.category;
+  // For the /featured/:subcategory route the param is named :subcategory
+  const subcategory = params.subcategory;
   // ?filterBy tells us which DB field to filter on (category | section | subcategory)
   // Defaults to 'category' so all existing clothing nav items keep working unchanged
   const filterBy = new URLSearchParams(location.search).get("filterBy") || "category";
@@ -32,9 +36,15 @@ function ProductListingPage({ pageType = "sport" }) {
   const [error, setError]         = useState("");
   const [activeCategory, setActiveCategory] = useState(null);
 
-  // ── Filter state ──────────────────────────────────────────────────────────
+  // ── Filter state (standard pages) ──────────────────────────────────────────
   const [sortBy, setSortBy]               = useState("default");
   const [selectedSizes, setSelectedSizes] = useState(new Set());
+
+  // ── Featured-page filter state (used only when pageType === "featured") ────
+  const makeFeaturedInit = () => ({
+    genders: new Set(), types: new Set(), brands: new Set(), sizes: new Set(), sortBy: 'default',
+  });
+  const [featuredFilters, setFeaturedFilters] = useState(makeFeaturedInit);
 
   // ── Mobile filter UI state ────────────────────────────────────────────────
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -59,6 +69,8 @@ function ProductListingPage({ pageType = "sport" }) {
   const buildUrl = () => {
     const base = "/api/products";
     if (pageType === "sport") return `${base}?sport=${sport}`;
+    // Featured Collection homepage cards — use featuredCategory param (backend maps it to MongoDB)
+    if (pageType === "featured") return `${base}?featuredCategory=${encodeURIComponent(subcategory)}`;
     const dept = pageType;
     if (category) return `${base}?department=${dept}&${filterBy}=${encodeURIComponent(category)}`;
     return `${base}?department=${dept}`;
@@ -83,6 +95,7 @@ function ProductListingPage({ pageType = "sport" }) {
         setProducts(data);
         setSortBy("default");
         setSelectedSizes(new Set());
+        setFeaturedFilters(makeFeaturedInit());
       } catch (err) {
         console.error("[ProductListingPage] Error fetching products from", url, err);
         setError("Failed to load products. Please check your connection.");
@@ -92,7 +105,7 @@ function ProductListingPage({ pageType = "sport" }) {
     };
     fetchProducts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sport, category, pageType, filterBy]);
+  }, [sport, category, subcategory, pageType, filterBy]);
 
   // ── Derived filter options ────────────────────────────────────────────────
   const sizeOptions = [...new Set(products.flatMap((p) => p.sizes || []))].sort();
@@ -110,23 +123,38 @@ function ProductListingPage({ pageType = "sport" }) {
     setSelectedSizes(new Set());
     setSortBy("default");
     setActiveCategory(null);
+    setFeaturedFilters(makeFeaturedInit());
   };
 
-  // ── In-memory filtering + sorting ────────────────────────────────────────
+  // ── Featured-page filtering (hook called unconditionally — Rules of Hooks) ─
+  const { filtered: featuredFiltered } = useFeaturedFilters(products, featuredFilters);
+
+  // ── Standard in-memory filtering + sorting (non-featured pages) ──────────
   let filtered = products;
   if (activeCategory) filtered = filtered.filter((p) => p.category === activeCategory);
   if (selectedSizes.size > 0) {
     filtered = filtered.filter((p) => (p.sizes || []).some((s) => selectedSizes.has(s)));
   }
-  const sortedProducts = [...filtered].sort((a, b) => {
+  const regularSorted = [...filtered].sort((a, b) => {
     if (sortBy === "price-asc")  return a.price - b.price;
     if (sortBy === "price-desc") return b.price - a.price;
     return 0;
   });
 
-  const hasActiveFilters = selectedSizes.size > 0 || sortBy !== "default";
+  // Use the right result based on pageType
+  const sortedProducts = pageType === "featured" ? featuredFiltered : regularSorted;
+
+  const hasActiveFilters = pageType === "featured"
+    ? featuredFilters.genders.size > 0 || featuredFilters.types.size > 0 ||
+      featuredFilters.brands.size > 0 || featuredFilters.sizes.size > 0 ||
+      featuredFilters.sortBy !== 'default'
+    : selectedSizes.size > 0 || sortBy !== "default";
   const activeFilterCount = (sortBy !== "default" ? 1 : 0); // size has its own button
-  const heading = pageType === "sport" ? sport : category || pageType;
+  const featuredActiveCount =
+    featuredFilters.genders.size + featuredFilters.types.size +
+    featuredFilters.brands.size + featuredFilters.sizes.size +
+    (featuredFilters.sortBy !== 'default' ? 1 : 0);
+  const heading = pageType === "sport" ? sport : pageType === "featured" ? subcategory : category || pageType;
 
   const priceLabelMap = {
     default:      "Price",
@@ -158,102 +186,8 @@ function ProductListingPage({ pageType = "sport" }) {
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <ProductListingHeader products={sortedProducts} heading={heading} />
 
-      {/* ── Subcategory nav — hidden on mobile ───────────────────────────── */}
-      <div className="hidden lg:block">
-        <ProductCategoryNav
-          products={products}
-          activeCategory={activeCategory}
-          onSelectCategory={setActiveCategory}
-        />
-      </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          MOBILE FILTER BAR  (hidden on lg+)
-      ══════════════════════════════════════════════════════════════════ */}
-      <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3 lg:hidden">
 
-        {/* Price dropdown */}
-        <div ref={priceRef} className="relative">
-          <button
-            onClick={() => { setPriceOpen((v) => !v); setSizeOpen(false); }}
-            className={`flex items-center gap-1 rounded-full border px-3 py-1.5 font-nav text-[13px] font-medium transition ${
-              sortBy !== "default"
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 text-gray-700 hover:border-gray-600"
-            }`}
-          >
-            {sortBy === "price-asc" ? "Price: Low → High" : sortBy === "price-desc" ? "Price: High → Low" : "Price"}
-            <FiChevronDown size={13} className={`transition-transform ${priceOpen ? "rotate-180" : ""}`} />
-          </button>
-          {priceOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 min-w-[160px] rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-              <div className="space-y-2">
-                {[
-                  { value: "price-asc",  label: "Low → High" },
-                  { value: "price-desc", label: "High → Low" },
-                ].map(({ value, label }) => (
-                  <label key={value} className="flex cursor-pointer items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={sortBy === value}
-                      onChange={() => { setSortBy(sortBy === value ? "default" : value); setPriceOpen(false); }}
-                      className="h-4 w-4 rounded border-gray-300 accent-gray-900"
-                    />
-                    <span className="font-nav text-[14px] text-gray-700">{label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Size dropdown — separate button */}
-        {sizeOptions.length > 0 && (
-          <div ref={sizeRef} className="relative">
-            <button
-              onClick={() => setSizeOpen((v) => !v)}
-              className={`flex items-center gap-1 rounded-full border px-3 py-1.5 font-nav text-[13px] font-medium transition ${
-                selectedSizes.size > 0
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-300 text-gray-700 hover:border-gray-600"
-              }`}
-            >
-              {selectedSizes.size > 0 ? `Size (${selectedSizes.size})` : "Size"}
-              <FiChevronDown size={13} className={`transition-transform ${sizeOpen ? "rotate-180" : ""}`} />
-            </button>
-            {sizeOpen && (
-              <div className="absolute left-0 top-full z-30 mt-1 min-w-[180px] rounded-xl border border-gray-200 bg-white p-3 shadow-lg">
-                <div className="flex flex-wrap gap-2">
-                  {sizeOptions.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => toggleSize(size)}
-                      className={`rounded border px-3 py-1.5 font-nav text-[13px] transition ${
-                        selectedSizes.has(size)
-                          ? "border-gray-900 bg-gray-900 text-white"
-                          : "border-gray-300 text-gray-700 hover:border-gray-600"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Clear all — only shown when filters are active */}
-        {hasActiveFilters && (
-          <button
-            onClick={clearAllFilters}
-            className="ml-auto flex items-center gap-1 font-nav text-[13px] text-gray-500 underline underline-offset-2"
-          >
-            <FiX size={13} />
-            Clear
-          </button>
-        )}
-      </div>
 
       {/* ══════════════════════════════════════════════════════════════════
           SLIDE-UP FILTER DRAWER  (mobile only)
@@ -278,24 +212,37 @@ function ProductListingPage({ pageType = "sport" }) {
             <FiX size={20} />
           </button>
         </div>
-        <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
-          <div className="space-y-2">
-            {[
-              { value: "price-asc",  label: "Low to High" },
-              { value: "price-desc", label: "High to Low" },
-            ].map(({ value, label }) => (
-              <label key={value} className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={sortBy === value}
-                  onChange={() => setSortBy(sortBy === value ? "default" : value)}
-                  className="h-4 w-4 rounded border-gray-300 accent-gray-900"
-                />
-                <span className="font-nav text-[15px] text-gray-700">{label}</span>
-              </label>
-            ))}
+        {pageType === "featured" ? (
+          /* Featured: render the full dynamic sidebar inside the drawer */
+          <div className="overflow-y-auto max-h-[60vh]">
+            <FeaturedSidebar
+              products={products}
+              featuredCategory={subcategory}
+              filters={featuredFilters}
+              onFiltersChange={setFeaturedFilters}
+            />
           </div>
-        </FilterSection>
+        ) : (
+          /* Standard pages: price-only drawer */
+          <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
+            <div className="space-y-2">
+              {[
+                { value: "price-asc",  label: "Low to High" },
+                { value: "price-desc", label: "High to Low" },
+              ].map(({ value, label }) => (
+                <label key={value} className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={sortBy === value}
+                    onChange={() => setSortBy(sortBy === value ? "default" : value)}
+                    className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                  />
+                  <span className="font-nav text-[15px] text-gray-700">{label}</span>
+                </label>
+              ))}
+            </div>
+          </FilterSection>
+        )}
         {hasActiveFilters && (
           <button
             onClick={() => { clearAllFilters(); setDrawerOpen(false); }}
@@ -313,47 +260,60 @@ function ProductListingPage({ pageType = "sport" }) {
 
         {/* ── Desktop sidebar (lg+ only) ──────────────────────────────── */}
         <aside className="hidden w-64 shrink-0 bg-white px-6 py-8 lg:block sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto">
-          <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
-            <div className="space-y-2">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={sortBy === "price-asc"}
-                  onChange={() => setSortBy(sortBy === "price-asc" ? "default" : "price-asc")}
-                  className="h-4 w-4 rounded border-gray-300 accent-gray-900"
-                />
-                <span className="font-nav text-[16px] text-gray-700">Low to High</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={sortBy === "price-desc"}
-                  onChange={() => setSortBy(sortBy === "price-desc" ? "default" : "price-desc")}
-                  className="h-4 w-4 rounded border-gray-300 accent-gray-900"
-                />
-                <span className="font-nav text-[16px] text-gray-700">High to Low</span>
-              </label>
-            </div>
-          </FilterSection>
+          {pageType === "featured" ? (
+            /* Featured: fully dynamic sidebar */
+            <FeaturedSidebar
+              products={products}
+              featuredCategory={subcategory}
+              filters={featuredFilters}
+              onFiltersChange={setFeaturedFilters}
+            />
+          ) : (
+            /* Standard pages: Price + Size only */
+            <>
+              <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
+                <div className="space-y-2">
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={sortBy === "price-asc"}
+                      onChange={() => setSortBy(sortBy === "price-asc" ? "default" : "price-asc")}
+                      className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                    />
+                    <span className="font-nav text-[16px] text-gray-700">Low to High</span>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={sortBy === "price-desc"}
+                      onChange={() => setSortBy(sortBy === "price-desc" ? "default" : "price-desc")}
+                      className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                    />
+                    <span className="font-nav text-[16px] text-gray-700">High to Low</span>
+                  </label>
+                </div>
+              </FilterSection>
 
-          {sizeOptions.length > 0 && (
-            <FilterSection title="Size" activeCount={selectedSizes.size}>
-              <div className="flex flex-wrap gap-2">
-                {sizeOptions.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => toggleSize(size)}
-                    className={`rounded border px-3 py-1.5 font-nav text-[14px] transition-colors ${
-                      selectedSizes.has(size)
-                        ? "border-gray-900 bg-gray-900 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:border-gray-600"
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </FilterSection>
+              {sizeOptions.length > 0 && (
+                <FilterSection title="Size" activeCount={selectedSizes.size}>
+                  <div className="flex flex-wrap gap-2">
+                    {sizeOptions.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => toggleSize(size)}
+                        className={`rounded border px-3 py-1.5 font-nav text-[14px] transition-colors ${
+                          selectedSizes.has(size)
+                            ? "border-gray-900 bg-gray-900 text-white"
+                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-600"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+            </>
           )}
         </aside>
 

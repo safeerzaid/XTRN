@@ -10,13 +10,26 @@ const router = express.Router()
 // { department: 'men' } against documents where the array contains 'men'
 router.get('/', async (req, res) => {
   try {
-    const { sport, department, category, section, subcategory } = req.query
+    const { sport, department, category, section, subcategory, featuredCategory } = req.query
     const filter = {}
     if (sport)       filter.sport       = { $regex: new RegExp(`^${sport}$`, 'i') }
     if (department)  filter.department  = department
     if (category)    filter.category    = category
     if (section)     filter.section     = section
     if (subcategory) filter.subcategory = subcategory
+
+    // Featured Collection homepage cards — map to the right MongoDB filter
+    if (featuredCategory) {
+      const fc = featuredCategory.toLowerCase()
+      if (fc === 'shoes') {
+        filter.section = 'Footwear'
+      } else if (fc === 'apparel') {
+        filter.department = { $in: ['men', 'women'] }
+        filter.section    = { $ne: 'Footwear' }
+      } else if (fc === 'accessories') {
+        filter.department = 'accessories'
+      }
+    }
 
     const products = await Product.find(filter)
     res.json(products)

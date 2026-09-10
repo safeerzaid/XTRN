@@ -3,7 +3,7 @@ import NavBar from '../components/layout/NavBar'
 import Hero from '../components/sections/Hero'
 import TrendingProducts from '../components/sections/TrendingProducts'
 import ExploreItems from '../components/sections/ExploreByItems'
-import FeaturedCollections from '../components/sections/FeaturedCollections'
+
 
 function Home() {
   return (
@@ -11,8 +11,7 @@ function Home() {
       <NavBar />
       <Hero />
       <TrendingProducts />
-      <ExploreByItems />
-      <FeaturedCollections />
+      <ExploreItems />
     </div>
   )
 }
