@@ -1,17 +1,20 @@
 import User from "../models/User.js"
+import { signupSchema } from "../validators/authValidator.js";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken'
 
 
 export const signup = async (req,res) => {
   try{
-    const { name, email, password } = req.body;
+    const result = signupSchema.safeParse(req.body)
     
-    if(!name || !email || !password){
+    if(!result.success){
       return res.status(400).json({
-        message: 'please fill all the fields'
+        message: 'invalid signup data'
       })
     }
+
+    const { name, email, password } = result.data;
 
     const existingUser = await User.findOne({
       email
@@ -31,9 +34,13 @@ export const signup = async (req,res) => {
       password : hashedPassword,
     })
 
+    const userResponse = newUser.toObject()
+    delete userResponse.password
+
     res.status(201).json({
       message: 'user created successfully',
-      user: newUser
+      user: userResponse
+
     })
 
   }catch(error){
