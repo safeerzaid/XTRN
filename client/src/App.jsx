@@ -3,6 +3,9 @@ import Home from './pages/Home'
 import ProductListingPage from './pages/ProductListingPage'
 import { Route, Routes } from 'react-router-dom'
 import ProductDetailPage from './pages/ProductDetailPage'
+import Login from "./pages/Login";
+import Signup from "./pages/SignUp";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -48,6 +51,21 @@ function App() {
         <Route 
           path='/product/:id'
           element ={<ProductDetailPage/>}
+        />
+
+        <Route 
+           path='/login'
+           element={<Login/>}
+        />
+
+        <Route 
+           path='/signup'
+           element={<Signup/>}
+        />
+
+        <Route 
+           path='/profile'
+           element={<Profile/>}
         />
 
       </Routes>

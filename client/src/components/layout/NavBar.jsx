@@ -16,6 +16,8 @@ import {
 import gsap from "gsap";
 
 import logo from "../../assets/images/logo/logo.png";
+import Login from "../Login";
+import Signup from "../Signup";
 
 const Navbar = ({ alwaysVisible = false }) => {
   const navItems = ["MEN", "WOMEN", "ACCESSORIES", "SALE"];
@@ -25,6 +27,10 @@ const Navbar = ({ alwaysVisible = false }) => {
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPath, setMenuPath] = useState([]);
+  
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [signupOpen, setSignupOpen] = useState(false);
   
 
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -606,15 +612,7 @@ const Navbar = ({ alwaysVisible = false }) => {
           </div>
         )}
 
-        {/* ── CURRENT LEVEL TITLE ─────────────────────────────────────────── */}
-        <div className="flex items-center justify-center pt-2 pb-6">
-          <span
-            className="text-[11px] font-bold tracking-[0.22em] text-black select-none"
-            style={{ fontFamily: "var(--font-nav)" }}
-          >
-            {menuPath.length === 0 ? "MENU" : menuPath[menuPath.length - 1]}
-          </span>
-        </div>
+
 
         {/* ── SCROLLABLE ITEM LIST ────────────────────────────────────────────
              Every item — whether a parent or leaf — is rendered the same way:
@@ -623,13 +621,13 @@ const Navbar = ({ alwaysVisible = false }) => {
              · No separator lines
         ─────────────────────────────────────────────────────────────── */}
         <nav
-          className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 pb-10"
+          className="flex-1 overflow-y-auto flex flex-col items-start justify-center px-6 pb-10"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {getCurrentMenuItems().map((menuItem, index, arr) => (
             <div
               key={menuItem.label}
-              className="w-full flex justify-center"
+              className="w-full flex justify-start"
               style={{
                 borderBottom: index < arr.length - 1 ? "1px solid #e5e7eb" : "none",
               }}
@@ -659,19 +657,37 @@ const Navbar = ({ alwaysVisible = false }) => {
                 style={{
                   fontFamily: "var(--font-nav)",
                   fontSize: "22px",
-                  fontWeight: 600,
+                  fontWeight: 400,
                   letterSpacing: "0.06em",
-                  textTransform: "uppercase",
+                  textTransform: "capitalize",
                   WebkitTapHighlightColor: "transparent",
                   WebkitAppearance: "none",
                   touchAction: "manipulation",
                 }}
               >
-                {menuItem.label}
+                {menuItem.label.toLowerCase()}
               </button>
             </div>
           ))}
         </nav>
+
+        {/* ── BOTTOM BUTTONS ─────────────────────────────────────────── */}
+        <div className="flex-shrink-0 flex flex-col gap-3 px-6 pb-8 pt-4 bg-white mt-auto">
+          <button
+            onClick={() => { closeMenu(); setSignupOpen(true); }}
+            className="w-full bg-[#3b4045] text-white py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase transition-colors hover:bg-black"
+            style={{ fontFamily: "var(--font-nav)" }}
+          >
+            Join Us
+          </button>
+          <button
+            onClick={() => { closeMenu(); setLoginOpen(true); }}
+            className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase transition-colors hover:bg-gray-50"
+            style={{ fontFamily: "var(--font-nav)" }}
+          >
+            Login
+          </button>
+        </div>
       </div>
 
       {/* ═══════════════════════════════════════════════
@@ -765,22 +781,10 @@ const Navbar = ({ alwaysVisible = false }) => {
               )}
             </button>
 
-            <button
-              type="button"
-              aria-label="Wishlist"
-              className="flex items-center justify-center p-2 text-black outline-none"
-              style={{
-                WebkitTapHighlightColor: "transparent",
-                WebkitAppearance: "none",
-                touchAction: "manipulation",
-              }}
-            >
-              <FiHeart size={21} strokeWidth={1.7} />
-            </button>
 
             <button
               type="button"
-              aria-label="Account"
+              aria-label="Cart"
               className="flex items-center justify-center p-2 text-black outline-none"
               style={{
                 WebkitTapHighlightColor: "transparent",
@@ -788,8 +792,10 @@ const Navbar = ({ alwaysVisible = false }) => {
                 touchAction: "manipulation",
               }}
             >
-              <FiUser size={22} strokeWidth={1.7} />
+              <FiShoppingBag size={21} strokeWidth={1.7} />
             </button>
+
+
           </div>
         </div>
       </div>
@@ -872,17 +878,13 @@ const Navbar = ({ alwaysVisible = false }) => {
 
 
 
-            <button
-              type="button"
-              aria-label="Wishlist"
-              className="transition-all duration-300 hover:scale-110"
-            >
-              <FiHeart size={19} strokeWidth={1.7} />
-            </button>
+
 
             <button type="button" className="transition-all duration-300 hover:scale-110">
               <FiShoppingBag size={20} strokeWidth={1.5} />
             </button>
+
+
           </div>
         </div>
       </nav>
@@ -996,6 +998,40 @@ const Navbar = ({ alwaysVisible = false }) => {
               <FiShoppingBag size={22} strokeWidth={1.5} />
             </button>
 
+            <div className="relative flex items-center justify-center">
+              <button
+                ref={(el) => { desktopIconRefs.current[3] = el; }}
+                type="button"
+                aria-label="Account"
+                onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                className="transition-all duration-300 hover:scale-110"
+                style={{ color: "#ffffff" }}
+              >
+                <FiUser size={21} strokeWidth={1.7} />
+              </button>
+              {accountMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setAccountMenuOpen(false)}></div>
+                  <div className="absolute right-0 top-full mt-2 w-[280px] bg-white shadow-xl border border-gray-200 flex flex-col p-5 z-50 text-black rounded-lg">
+                    <button
+                      onClick={() => { setAccountMenuOpen(false); setLoginOpen(true); }}
+                      className="w-full bg-[#3b4045] text-white py-3.5 text-[14px] tracking-[0.08em] font-semibold hover:bg-black transition-colors"
+                      style={{ fontFamily: "var(--font-nav)" }}
+                    >
+                      LOGIN
+                    </button>
+                    <button
+                      onClick={() => { setAccountMenuOpen(false); setSignupOpen(true); }}
+                      className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 mt-3 text-[14px] tracking-[0.08em] font-semibold hover:bg-gray-50 transition-colors"
+                      style={{ fontFamily: "var(--font-nav)" }}
+                    >
+                      JOIN US
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
           </div>
         </div>
 
@@ -1092,6 +1128,40 @@ const Navbar = ({ alwaysVisible = false }) => {
               <FiShoppingBag size={24} strokeWidth={1.5} />
             </button>
 
+            <div className="relative flex items-center justify-center">
+              <button
+                ref={(el) => { desktop4kIconRefs.current[3] = el; }}
+                type="button"
+                aria-label="Account"
+                onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                className="transition-all duration-300 hover:scale-110"
+                style={{ color: "#ffffff" }}
+              >
+                <FiUser size={23} strokeWidth={1.7} />
+              </button>
+              {accountMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setAccountMenuOpen(false)}></div>
+                  <div className="absolute right-0 top-full mt-2 w-[280px] bg-white shadow-xl border border-gray-200 flex flex-col p-5 z-50 text-black rounded-lg">
+                    <button
+                      onClick={() => { setAccountMenuOpen(false); setLoginOpen(true); }}
+                      className="w-full bg-[#3b4045] text-white py-3.5 text-[14px] tracking-[0.08em] font-semibold hover:bg-black transition-colors"
+                      style={{ fontFamily: "var(--font-nav)" }}
+                    >
+                      LOGIN
+                    </button>
+                    <button
+                      onClick={() => { setAccountMenuOpen(false); setSignupOpen(true); }}
+                      className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 mt-3 text-[14px] tracking-[0.08em] font-semibold hover:bg-gray-50 transition-colors"
+                      style={{ fontFamily: "var(--font-nav)" }}
+                    >
+                      JOIN US
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
           </div>
         </div>
 
@@ -1109,7 +1179,19 @@ const Navbar = ({ alwaysVisible = false }) => {
 
       {/* Mega menu---------------------- */}
 
-  
+      {loginOpen && (
+        <Login 
+          onClose={() => setLoginOpen(false)} 
+          onSignupClick={() => { setLoginOpen(false); setSignupOpen(true); }} 
+        />
+      )}
+
+      {signupOpen && (
+        <Signup 
+          onClose={() => setSignupOpen(false)} 
+          onLoginClick={() => { setSignupOpen(false); setLoginOpen(true); }} 
+        />
+      )}
     </>
   );
 };

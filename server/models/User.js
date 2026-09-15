@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { string } from 'zod'
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,6 +24,19 @@ const userSchema = new mongoose.Schema(
         enum: ["user", 'admin'],
         default: 'user'
     },
+    refreshTokens: [
+      {
+        tokenHash : {
+          type: String,
+          required: true
+        },
+
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+      }
+    ]
   },
   {
     timestamps: true,

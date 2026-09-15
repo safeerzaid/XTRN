@@ -4,6 +4,7 @@ import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import NavBar from "../components/layout/NavBar";
 import ProductListCard from "../components/ui/ProductListCard";
+import api from "../api/axios";
 
 function ProductDetailPage() {
   const [product, setProduct] = useState(null);
@@ -12,6 +13,7 @@ function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedSize, setSelectedSize] = useState("");
+  
 
   const { id } = useParams();
 
@@ -22,16 +24,19 @@ function ProductDetailPage() {
 
     // Fire both requests in parallel — eliminates the waterfall delay
     Promise.all([
-      fetch(`/api/products/${id}`).then((res) => res.json()),
-      fetch("/api/products").then((res) => res.json()),
+      api.get(`/products/${id}`),
+      api.get("/products"),
     ])
-      .then(([data, allProducts]) => {
-        setProduct(data);
+      .then(([productResponse, productsResponse]) => {
+        const data = productResponse.data
+        const allProduct = productsResponse.data
+        
+        setProduct(data)
         setSelectedImage(data.images.default[0]);
         setLoading(false);
 
         // 1. Same subcategory
-        let filtered = allProducts.filter(
+        let filtered = allProduct.filter(
           (item) =>
             item._id !== id &&
             item.gender === data.gender &&
@@ -41,7 +46,7 @@ function ProductDetailPage() {
 
         // 2. If less than 4, fill with same category
         if (filtered.length < 4) {
-          const sameCategory = allProducts.filter(
+          const sameCategory = allProduct.filter(
             (item) =>
               item._id !== id &&
               item.gender === data.gender &&
@@ -53,7 +58,7 @@ function ProductDetailPage() {
 
         // 3. If still less than 4, fill with same gender
         if (filtered.length < 4) {
-          const sameGender = allProducts.filter(
+          const sameGender = allProduct.filter(
             (item) =>
               item._id !== id &&
               item.gender === data.gender &&

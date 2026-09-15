@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { FiSliders, FiChevronDown, FiX } from "react-icons/fi";
+import api  from "../api/axios";
 
 import NavBar from "../components/layout/NavBar";
 import ProductListingHeader from "../components/ui/ProductListingHeader";
@@ -64,12 +65,12 @@ function ProductListingPage({ pageType = "sport" }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Build API URL using a relative path so it works from any device on the
-  // network. The Vite dev server proxies /api → http://localhost:5000.
+  
   const buildUrl = () => {
-    const base = "/api/products";
+    const base = "/products";
+
     if (pageType === "sport") return `${base}?sport=${sport}`;
-    // Featured Collection homepage cards — use featuredCategory param (backend maps it to MongoDB)
+    
     if (pageType === "featured") return `${base}?featuredCategory=${encodeURIComponent(subcategory)}`;
     const dept = pageType;
     if (category) return `${base}?department=${dept}&${filterBy}=${encodeURIComponent(category)}`;
@@ -84,13 +85,11 @@ function ProductListingPage({ pageType = "sport" }) {
         setError("");
         setActiveCategory(null);
         console.log("[ProductListingPage] Fetching products from:", url);
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(
-            `Server responded with ${response.status} ${response.statusText} for ${url}`
-          );
-        }
-        const data = await response.json();
+
+        const response = await api.get(url)
+        const data = response.data;
+
+
         console.log("[ProductListingPage] Loaded", data.length, "products");
         setProducts(data);
         setSortBy("default");
