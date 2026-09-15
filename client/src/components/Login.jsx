@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import logo from '../assets/images/logo/logo.png';
 import api from "../api/axios";
+import { useAuth } from "../context/authContext";
 
 const Login = ({ onClose, onSignupClick }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const { setAccessToken } = useAuth();
 
   // Basic email validation regex
  const isValidEmail = (email) =>
@@ -24,6 +27,8 @@ const Login = ({ onClose, onSignupClick }) => {
       password,
     });
 
+    setAccessToken(response.data.accessToken);
+
     console.log("Login success:", response.data);
     onClose();
 
@@ -31,6 +36,8 @@ const Login = ({ onClose, onSignupClick }) => {
     console.log("Login failed:", error.response?.data);
   }
   };
+
+
 
   return (
     <div 
