@@ -18,7 +18,7 @@ function ProductListCard({ product, pageType = "sport" }) {
     const imgs = product.images;
 
     if (!imgs) {
-      return undefined;
+      return product.image;
     }
 
     if (pageType === "men") {
@@ -169,7 +169,7 @@ function ProductListCard({ product, pageType = "sport" }) {
 
           <h3
             className="
-              text-[14px]
+              text-lg
               font-nav
               font-medium
               mb-1
@@ -179,15 +179,6 @@ function ProductListCard({ product, pageType = "sport" }) {
             {product.name}
           </h3>
 
-          <p
-          className="
-          hidden lg:block
-          text-gray-600
-          font-nav 
-          text-[16px]
-          "
-          >{product.description}
-          </p>
 
 
             {/* PRICES */}

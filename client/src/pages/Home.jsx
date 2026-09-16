@@ -4,14 +4,13 @@ import Hero from '../components/sections/Hero'
 import TrendingProducts from '../components/sections/TrendingProducts'
 import ExploreItems from '../components/sections/ExploreByItems'
 
-
 function Home() {
   return (
     <div>
       <NavBar />
       <Hero />
-      <TrendingProducts />
       <ExploreItems />
+      <TrendingProducts />
     </div>
   )
 }

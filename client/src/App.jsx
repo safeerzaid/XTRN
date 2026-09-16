@@ -3,8 +3,8 @@ import Home from './pages/Home'
 import ProductListingPage from './pages/ProductListingPage'
 import { Route, Routes } from 'react-router-dom'
 import ProductDetailPage from './pages/ProductDetailPage'
-import Login from "./pages/Login";
-import Signup from "./pages/SignUp";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
 import Profile from "./pages/Profile";
 
 function App() {

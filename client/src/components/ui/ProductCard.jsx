@@ -2,13 +2,13 @@ import React from 'react'
 
 function ProductCard({ product }) {
   return (
-    <div className="group relative overflow-hidden aspect-[3/4] bg-gray-100 border-r border-gray-200">
+    <div className="group relative overflow-hidden aspect-square bg-gray-100 border-r border-gray-200">
 
-      {/* Image — covers the full card, no whitespace */}
+      {/* Image — contained within the card without cropping */}
       <img
         src={product.image}
         alt={product.name}
-        className="w-full h-full object-cover transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
+        className="w-full h-full object-contain p-6 transition-transform duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
       />
 
 

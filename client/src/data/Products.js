@@ -1,75 +1,50 @@
-import img1 from "../assets/images/products/trending/Nike Air Max 90 QS.jpg";
-import img2 from "../assets/images/products/trending/Dri-FIT Training Tee.png";
-import img3 from "../assets/images/products/trending/Under Armour Duffel Bag.png";
-import img4 from "../assets/images/products/trending/Nike Revolution 8.png";
-import img5 from "../assets/images/products/trending/Adidas Lightblaze.png";
-import img6 from "../assets/images/products/trending/Under Armour Launch Shorts.png";
-import img7 from "../assets/images/products/trending/Adidas Sport Sunglasses.png";
-import img8 from "../assets/images/products/trending/Adidas Dreamstrike Glow.png";
-import img9 from "../assets/images/products/trending/Performance Track Pants.png";
-import img10 from "../assets/images/products/trending/Klättermusen Fjörm Backpack.png";
-
-
-
 export const trendingProducts = [
   {
-    id: 1,
-    name: "Adidas Dreamstrike Glow",
-    price: 15999,
-    image: img1,
+    "id": 1,
+    "name": "XTRN Velocity Run Shoes",
+    "price": 2499,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1788244815/Running_shoes_product_photo_202609011200_cgusi3.jpg"
   },
   {
-    id: 2,
-    name: "Nike Dri-FIT Tee",
-    price: 2499,
-    image: img2,
+    "id": 2,
+    "name": "XTRN Aero Training Shoes",
+    "price": 2299,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1788247657/Training_shoes_product_photography_202609011256_gvyaf7.jpg"
   },
   {
-    id: 3,
-    name: "Under Armour Duffel Bag",
-    price: 3999,
-    image: img3,
+    "id": 3,
+    "name": "XTRN Flex Runner",
+    "price": 2199,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1788247870/Men_running_shoes_displayed_202609011259_oeit1w.jpg"
   },
   {
-    id: 4,
-    name: "Nike Revolution 8",
-    price: 6995,
-    image: img4,
+    "id": 4,
+    "name": "XTRN Sprint Pro Shoes",
+    "price": 2799,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1788248132/XTRN_Sprint_Pro_Shoes_running_202609011303_jlzu5c.jpg"
   },
   {
-    id: 5,
-    name: "Adidas Lightblaze",
-    price: 11999,
-    image: img5,
+    "id": 5,
+    "name": "XTRN Compression Base Tee",
+    "price": 699,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1787027126/Model_wearing_compression_base_tee_202608180953_fhbr8o.jpg"
   },
   {
-    id: 6,
-    name: "Under Armour Launch Shorts",
-    price: 2799,
-    image: img6,
+    "id": 6,
+    "name": "XTRN Graphic Logo Tee",
+    "price": 799,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1787027782/Model_wearing_logo_tee_202608180957_zzepmy.jpg"
   },
   {
-    id: 7,
-    name: "Adidas Sport Sunglasses",
-    price: 8999,
-    image: img7,
+    "id": 7,
+    "name": "XTRN Raglan Sleeve T-Shirt",
+    "price": 899,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1787028006/Fitness_model_wearing_t-shirt_202608181008_nko6vc.jpg"
   },
   {
-    id: 8,
-    name: "Windcheater Jacket",
-    price: 999,
-    image: img8,
-  },
-  {
-    id: 9,
-    name: "Performance Track Pants",
-    price: 3499,
-    image: img9,
-  },
-  {
-    id: 10,
-    name: "Klättermusen Fjörm Backpack",
-    price: 12999,
-    image: img10,
-  },
+    "id": 8,
+    "name": "XTRN Women's Racerback Training Tee",
+    "price": 849,
+    "image": "https://res.cloudinary.com/duvfdxql9/image/upload/v1787029334/Model_wearing_training_tee_202608181030_e5iyxz.jpg"
+  }
 ];

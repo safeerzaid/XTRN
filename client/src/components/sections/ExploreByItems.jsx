@@ -58,11 +58,11 @@ function ExploreByItems() {
                 md:pl-4 md:pb-2.5
                 lg:pl-5 lg:pb-3
                 font-nav font-semibold text-white
-                text-[20px]
-                sm:text-[14px]
-                md:text-[15px]
-                lg:text-[18px]
-                xl:text-[22px]
+                text-[24px]
+                sm:text-[18px]
+                md:text-[20px]
+                lg:text-[24px]
+                xl:text-[28px]
                 leading-tight
                 truncate
               "
