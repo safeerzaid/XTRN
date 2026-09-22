@@ -45,27 +45,23 @@ function TrendingProducts() {
     <section className="mt-12 md:mt-32 w-full px-0 sm:px-6 md:px-8 2xl:px-12 pb-10 md:pb-16 overflow-x-hidden">
 
       {/* Heading Row */}
-      <div className="mb-5 md:mb-10 flex flex-col md:flex-row md:items-end justify-between px-4 sm:px-0 gap-4">
-        <h2 className="font-nav text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold">
-          Popular Picks
+      <div className="mb-5 md:mb-10 flex flex-col md:flex-row md:items-center justify-between px-4 sm:px-0 gap-4">
+        <h2 className="font-nav text-[22px] sm:text-2xl md:text-3xl font-bold text-black">
+          Our Best Sellers
         </h2>
         
         <div className="flex items-center gap-6">
-          <Link to="/products" className="font-nav text-gray-900 text-sm md:text-base font-medium hover:underline underline-offset-4">
-            see more &rarr;
-          </Link>
-          
           {/* Navigation Arrows */}
           <div className="hidden md:flex gap-3">
             <button
               onClick={() => swiperRef.current?.slidePrev()}
-              className="h-10 w-10 rounded-full border border-gray-300 flex items-center justify-center transition-all duration-300 ease-in-out hover:bg-black hover:text-white hover:border-black"
+              className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 ease-in-out hover:bg-gray-200 text-gray-700"
             >
               <IoIosArrowBack size={18} />
             </button>
             <button
               onClick={() => swiperRef.current?.slideNext()}
-              className="h-10 w-10 rounded-full border border-gray-300 flex items-center justify-center transition-all duration-300 ease-in-out hover:bg-black hover:text-white hover:border-black"
+              className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center transition-all duration-300 ease-in-out hover:bg-gray-200 text-gray-700"
             >
               <IoIosArrowForward size={18} />
             </button>
@@ -79,21 +75,25 @@ function TrendingProducts() {
           onSwiper={(swiper) => (swiperRef.current = swiper)}
           breakpoints={{
             0: {
-              slidesPerView: 1.2,
-              spaceBetween: 8,
+              slidesPerView: 1.4,
+              spaceBetween: 2,
             },
             480: {
-              slidesPerView: 1.5,
-              spaceBetween: 8,
+              slidesPerView: 2.3,
+              spaceBetween: 2,
             },
             768: {
-              slidesPerView: 2.5,
-              spaceBetween: 8,
+              slidesPerView: 2.8,
+              spaceBetween: 2,
             },
             1024: {
-              slidesPerView: 2.8,
-              spaceBetween: 8,
+              slidesPerView: 3.6,
+              spaceBetween: 4,
             },
+            1280: {
+              slidesPerView: 4.0,
+              spaceBetween: 4,
+            }
           }}
           className="!overflow-visible"
         >

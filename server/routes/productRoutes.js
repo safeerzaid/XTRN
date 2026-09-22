@@ -11,9 +11,28 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const { sport, department, category, section, subcategory, featuredCategory } = req.query
-    const filter = {}
-    if (sport)       filter.sport       = { $regex: new RegExp(`^${sport}$`, 'i') }
-    if (department)  filter.department  = department
+    const filter = {} 
+    
+    if (sport) {
+      if (sport.toLowerCase().endsWith('-shoes')) {
+        const baseSport = sport.substring(0, sport.length - 6) // e.g. 'running'
+        filter.$or = [
+          { sport: { $regex: new RegExp(`^${baseSport}$`, 'i') }, section: 'Footwear' },
+          { category: { $regex: new RegExp(`^${baseSport} shoes$`, 'i') } }
+        ]
+      } else {
+        filter.$or = [
+          { sport: { $regex: new RegExp(`^${sport}$`, 'i') } },
+          { category: { $regex: new RegExp(`^${sport} shoes$`, 'i') } }
+        ]
+      }
+    }
+    if (department) {
+      filter.department = department
+      if (department === 'men' || department === 'women') {
+        filter.gender = department // Strictly only men or women
+      }
+    }
     if (category)    filter.category    = category
     if (section)     filter.section     = section
     if (subcategory) filter.subcategory = subcategory
@@ -26,8 +45,13 @@ router.get('/', async (req, res) => {
       } else if (fc === 'apparel') {
         filter.department = { $in: ['men', 'women'] }
         filter.section    = { $ne: 'Footwear' }
+        filter.gender     = { $ne: 'unisex' } // Exclude unisex from general apparel
       } else if (fc === 'accessories') {
         filter.department = 'accessories'
+      } else if (fc === 'men') {
+        filter.department = 'men'
+      } else if (fc === 'women') {
+        filter.department = 'women'
       }
     }
 

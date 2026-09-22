@@ -4,6 +4,7 @@ import { FiSliders, FiChevronDown, FiX } from "react-icons/fi";
 import api  from "../api/axios";
 
 import NavBar from "../components/layout/NavBar";
+import Footer from "../components/layout/Footer";
 import ProductListingHeader from "../components/ui/ProductListingHeader";
 import ProductCategoryNav from "../components/ui/ProductCategoryNav";
 import ProductListCard from "../components/ui/ProductListCard";
@@ -35,7 +36,7 @@ function ProductListingPage({ pageType = "sport" }) {
   const [products, setProducts]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState("");
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [selectedGenders, setSelectedGenders]       = useState(new Set());
 
   // ── Filter state (standard pages) ──────────────────────────────────────────
   const [sortBy, setSortBy]               = useState("default");
@@ -83,7 +84,7 @@ function ProductListingPage({ pageType = "sport" }) {
       try {
         setLoading(true);
         setError("");
-        setActiveCategory(null);
+        setSelectedGenders(new Set());
         console.log("[ProductListingPage] Fetching products from:", url);
 
         const response = await api.get(url)
@@ -108,6 +109,7 @@ function ProductListingPage({ pageType = "sport" }) {
 
   // ── Derived filter options ────────────────────────────────────────────────
   const sizeOptions = [...new Set(products.flatMap((p) => p.sizes || []))].sort();
+  const genderOptions = [...new Set(products.map((p) => p.gender).filter(Boolean))].sort();
 
   // ── Toggle helpers ────────────────────────────────────────────────────────
   const toggleSize = (size) => {
@@ -118,10 +120,18 @@ function ProductListingPage({ pageType = "sport" }) {
     });
   };
 
+  const toggleGender = (gen) => {
+    setSelectedGenders((prev) => {
+      const next = new Set(prev);
+      next.has(gen) ? next.delete(gen) : next.add(gen);
+      return next;
+    });
+  };
+
   const clearAllFilters = () => {
+    setSelectedGenders(new Set());
     setSelectedSizes(new Set());
     setSortBy("default");
-    setActiveCategory(null);
     setFeaturedFilters(makeFeaturedInit());
   };
 
@@ -130,7 +140,9 @@ function ProductListingPage({ pageType = "sport" }) {
 
   // ── Standard in-memory filtering + sorting (non-featured pages) ──────────
   let filtered = products;
-  if (activeCategory) filtered = filtered.filter((p) => p.category === activeCategory);
+  if (selectedGenders.size > 0) {
+    filtered = filtered.filter((p) => selectedGenders.has(p.gender));
+  }
   if (selectedSizes.size > 0) {
     filtered = filtered.filter((p) => (p.sizes || []).some((s) => selectedSizes.has(s)));
   }
@@ -147,8 +159,8 @@ function ProductListingPage({ pageType = "sport" }) {
     ? featuredFilters.genders.size > 0 || featuredFilters.types.size > 0 ||
       featuredFilters.brands.size > 0 || featuredFilters.sizes.size > 0 ||
       featuredFilters.sortBy !== 'default'
-    : selectedSizes.size > 0 || sortBy !== "default";
-  const activeFilterCount = (sortBy !== "default" ? 1 : 0); // size has its own button
+    : selectedSizes.size > 0 || selectedGenders.size > 0 || sortBy !== "default";
+  const activeFilterCount = (sortBy !== "default" ? 1 : 0); // size and gender have their own buttons
   const featuredActiveCount =
     featuredFilters.genders.size + featuredFilters.types.size +
     featuredFilters.brands.size + featuredFilters.sizes.size +
@@ -222,8 +234,27 @@ function ProductListingPage({ pageType = "sport" }) {
             />
           </div>
         ) : (
-          /* Standard pages: price-only drawer */
-          <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
+          /* Standard pages: category + price + size drawer */
+          <div className="space-y-6">
+            {genderOptions.length > 0 && (
+              <FilterSection title="Gender" activeCount={selectedGenders.size}>
+                <div className="space-y-2">
+                  {genderOptions.map((gen) => (
+                    <label key={gen} className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedGenders.has(gen)}
+                        onChange={() => toggleGender(gen)}
+                        className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                      />
+                      <span className="font-nav text-[15px] capitalize text-gray-700">{gen}</span>
+                    </label>
+                  ))}
+                </div>
+              </FilterSection>
+            )}
+
+            <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
             <div className="space-y-2">
               {[
                 { value: "price-asc",  label: "Low to High" },
@@ -241,7 +272,29 @@ function ProductListingPage({ pageType = "sport" }) {
               ))}
             </div>
           </FilterSection>
-        )}
+
+              {sizeOptions.length > 0 && (
+                <FilterSection title="Size" activeCount={selectedSizes.size}>
+                  <div className="flex flex-wrap gap-2">
+                    {sizeOptions.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => toggleSize(size)}
+                        className={`rounded border px-3 py-1.5 font-nav text-[14px] transition-colors ${
+                          selectedSizes.has(size)
+                            ? "border-gray-900 bg-gray-900 text-white"
+                            : "border-gray-300 bg-white text-gray-700 hover:border-gray-600"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+            </div>
+          )
+        }
         {hasActiveFilters && (
           <button
             onClick={() => { clearAllFilters(); setDrawerOpen(false); }}
@@ -268,8 +321,26 @@ function ProductListingPage({ pageType = "sport" }) {
               onFiltersChange={setFeaturedFilters}
             />
           ) : (
-            /* Standard pages: Price + Size only */
+            /* Standard pages: Category + Price + Size only */
             <>
+              {genderOptions.length > 0 && (
+                <FilterSection title="Gender" activeCount={selectedGenders.size}>
+                  <div className="space-y-2">
+                    {genderOptions.map((gen) => (
+                      <label key={gen} className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedGenders.has(gen)}
+                          onChange={() => toggleGender(gen)}
+                          className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+                        />
+                        <span className="font-nav text-[16px] capitalize text-gray-700">{gen}</span>
+                      </label>
+                    ))}
+                  </div>
+                </FilterSection>
+              )}
+
               <FilterSection title="Price" activeCount={sortBy !== "default" ? 1 : 0}>
                 <div className="space-y-2">
                   <label className="flex cursor-pointer items-center gap-2">
@@ -343,6 +414,9 @@ function ProductListingPage({ pageType = "sport" }) {
           )}
         </div>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

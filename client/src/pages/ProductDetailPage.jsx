@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import NavBar from "../components/layout/NavBar";
+import Footer from "../components/layout/Footer";
 import ProductListCard from "../components/ui/ProductListCard";
 import api from "../api/axios";
 
@@ -310,19 +311,20 @@ function ProductDetailPage() {
   {/* Products Grid */}
   <div className="grid grid-cols-2 lg:grid-cols-4  lg:gap-2">
 
-    {relatedProducts.map((item) => (
-      <ProductListCard
-        key={item._id}
-        product={item}
-      />
-    ))}
+        {relatedProducts.map((item) => (
+          <ProductListCard
+            key={item._id}
+            product={item}
+          />
+        ))}
 
+        </div>
+
+      </section>
+
+      <Footer />
     </div>
-
-  </section>
-
-      </div>
-    );
-  }
+  );
+}
 
 export default ProductDetailPage;

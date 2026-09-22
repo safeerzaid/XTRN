@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useLayoutEffect, useRef } from "react";
+import gsap from "gsap";
 
 /**
  * MegaMenu
@@ -15,6 +17,17 @@ import { useNavigate } from "react-router-dom";
  */
 function MegaMenu({ data, navKey }) {
   const navigate = useNavigate();
+  const menuRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (menuRef.current) {
+      gsap.fromTo(
+        menuRef.current,
+        { clipPath: "inset(0% 0% 100% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.35, ease: "power2.out", overwrite: true }
+      );
+    }
+  }, [data]);
 
   const columnCount =
     data.sections.length >= 8
@@ -40,7 +53,7 @@ function MegaMenu({ data, navKey }) {
   };
 
   return (
-    <div className="absolute top-full left-0 z-40 w-full">
+    <div ref={menuRef} className="absolute top-full left-0 z-40 w-full">
       <div className="bg-white shadow-lg">
         <div className="mx-auto max-w-[1400px] px-14 py-8">
 

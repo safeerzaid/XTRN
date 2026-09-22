@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 function Hero() {
   return (
     /*
@@ -12,16 +14,12 @@ function Hero() {
         relative w-full
 
         /* ── MOBILE ─────────────────────────────────── */
-        h-[62svh]
+        h-[80vh]
         mt-[72px]
-        px-2
-        py-1
 
         /* ── DESKTOP (md+) ───────────────────────────── */
-        md:h-screen
-        md:mt-1
-        md:px-2
-        md:py-1
+        md:h-[80vh]
+        md:mt-0
       "
     >
       {/* Hero Container */}
@@ -29,9 +27,7 @@ function Hero() {
         className="
           relative h-full w-full overflow-hidden
 
-          /* smaller radius on mobile, same on desktop */
-          rounded-[8px]
-          md:rounded-[8px]
+          relative h-full w-full overflow-hidden
         "
       >
         {/* Background Video */}
@@ -47,42 +43,41 @@ function Hero() {
         </video>
 
         {/* Overlay */}
-        {/* <div className="absolute inset-0 bg-black/50" /> */}
+        <div className="absolute inset-0 bg-black/30" />
 
         {/* Content */}
         <div
           className="
             absolute z-10 text-white font-nav
-
-            /* ── MOBILE: centered, lower-middle ─────── */
-            bottom-10 left-0 right-0
+            bottom-8 md:bottom-10 left-0 right-0
             flex flex-col items-center text-center
             px-4
-
-            /* ── DESKTOP (md+): left-aligned original ─ */
-            md:bottom-12 md:left-10 md:right-auto
-            md:flex md:flex-col md:items-start md:text-left
-            md:px-0
-
-            lg:bottom-14 lg:left-16
           "
         >
+          <span className="mb-3 text-[12px] sm:text-[14px] md:text-[16px] font-bold tracking-widest uppercase">
+            Shop the new collection
+          </span>
           <h1
             className="
-              font-semibold tracking-tight leading-[0.85]
-
-              /* mobile → tablet → desktop scale */
-              text-[48px]
-              sm:text-[56px]
-              md:text-[90px]
-              lg:text-[120px]
-              xl:text-[150px]
+              font-bold tracking-tight leading-tight
+              text-[28px]
+              sm:text-[36px]
+              md:text-[48px]
+              lg:text-[56px]
+              xl:text-[64px]
+              mb-4
             "
           >
-            Gear Up.
-            <br />
-            For Greatness.
+            GEAR UP. FOR GREATNESS.
           </h1>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link to="/men" className="bg-white text-black px-7 py-3.5 rounded-full text-[13px] md:text-[14px] font-bold tracking-wide hover:bg-black hover:text-white transition-colors cursor-pointer text-center inline-block">
+              SHOP FOR HIM
+            </Link>
+            <Link to="/women" className="bg-white text-black px-7 py-3.5 rounded-full text-[13px] md:text-[14px] font-bold tracking-wide hover:bg-black hover:text-white transition-colors cursor-pointer text-center inline-block">
+              SHOP FOR HER
+            </Link>
+          </div>
         </div>
       </div>
     </section>

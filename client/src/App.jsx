@@ -6,8 +6,33 @@ import ProductDetailPage from './pages/ProductDetailPage'
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Profile from "./pages/Profile";
+import { useEffect } from 'react';
+import Lenis from 'lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 function App() {
+  useEffect(() => {
+    const lenis = new Lenis();
+
+    lenis.on('scroll', ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove((time) => {
+        lenis.raf(time * 1000);
+      });
+      lenis.destroy();
+    };
+  }, []);
+
   return (
     <div>
       <Routes>
@@ -24,13 +49,21 @@ function App() {
           element={<ProductListingPage pageType="sport" />}
         />
 
-        {/* Men — /men/:category (e.g. /men/T-Shirts) */}
+        {/* Men — /men and /men/:category */}
+        <Route
+          path='/men'
+          element={<ProductListingPage pageType="men" />}
+        />
         <Route
           path='/men/:category'
           element={<ProductListingPage pageType="men" />}
         />
 
-        {/* Women — /women/:category (e.g. /women/Hoodies) */}
+        {/* Women — /women and /women/:category */}
+        <Route
+          path='/women'
+          element={<ProductListingPage pageType="women" />}
+        />
         <Route
           path='/women/:category'
           element={<ProductListingPage pageType="women" />}

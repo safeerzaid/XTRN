@@ -26,6 +26,9 @@ function FeaturedSidebar({ products, featuredCategory, filters, onFiltersChange 
   const meaningfulSizes = allSizes.filter(s => s !== 'One Size')
   const showSizes = featuredCategory !== 'accessories' && meaningfulSizes.length > 0
 
+  // Hide Gender for accessories since they are all unisex
+  const showGender = featuredCategory !== 'accessories' && genderOptions.length > 0
+
   // Human-readable label for the Type filter group
   const typeLabel =
     featuredCategory === 'shoes'       ? 'Shoe Type'      :
@@ -52,7 +55,7 @@ function FeaturedSidebar({ products, featuredCategory, filters, onFiltersChange 
   return (
     <div>
       {/* ── Gender ──────────────────────────────────────────────────────── */}
-      {genderOptions.length > 0 && (
+      {showGender && (
         <FilterSection title="Gender" activeCount={genders.size} defaultOpen>
           <div className="space-y-2">
             {genderOptions.map(g => (

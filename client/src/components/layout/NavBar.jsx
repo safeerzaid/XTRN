@@ -363,7 +363,7 @@ const Navbar = ({ alwaysVisible = false }) => {
 
   useEffect(() => {
     // alwaysVisible overrides hover/scroll — navbar is permanently white.
-    const shouldBeWhite = alwaysVisible || desktopScrolled || desktopHovered;
+    const shouldBeWhite = alwaysVisible || desktopScrolled || !!active;
 
     const nav = desktopNavRef.current;
     const desktopTexts = desktopTextRefs.current.filter(Boolean);
@@ -373,17 +373,17 @@ const Navbar = ({ alwaysVisible = false }) => {
     const logos = [desktopLogoRef.current, desktop4kLogoRef.current].filter(Boolean);
 
     if (shouldBeWhite) {
-      gsap.to(nav, { backgroundColor: "#ffffff", duration: 0.35, ease: "power2.out" });
+      gsap.to(nav, { backgroundColor: "#ffffff", borderBottomColor: "rgba(0,0,0,0)", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopTexts, ...desktop4kTexts], { color: "#000000", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopIcons, ...desktop4kIcons], { color: "#000000", duration: 0.35, ease: "power2.out" });
       gsap.to(logos, { filter: "brightness(0)", duration: 0.35, ease: "power2.out" });
     } else {
-      gsap.to(nav, { backgroundColor: "rgba(255,255,255,0)", duration: 0.35, ease: "power2.out" });
+      gsap.to(nav, { backgroundColor: "rgba(255,255,255,0)", borderBottomColor: "rgba(255,255,255,0.7)", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopTexts, ...desktop4kTexts], { color: "#ffffff", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopIcons, ...desktop4kIcons], { color: "#ffffff", duration: 0.35, ease: "power2.out" });
       gsap.to(logos, { filter: "none", duration: 0.35, ease: "power2.out" });
     }
-  }, [alwaysVisible, desktopScrolled, desktopHovered]);
+  }, [alwaysVisible, desktopScrolled, desktopHovered, active]);
 
   /* ─────────────────────────────────────────────
      MOBILE SEARCH
@@ -867,7 +867,7 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="button"
               aria-label={tabletSearchOpen ? "Close search" : "Search"}
               onClick={tabletSearchOpen ? closeTabletSearch : openTabletSearch}
-              className="transition-all duration-300 hover:scale-110"
+              className="transition-all duration-300 hover:scale-110 cursor-pointer"
             >
               {tabletSearchOpen ? (
                 <FiX size={19} />
@@ -880,7 +880,7 @@ const Navbar = ({ alwaysVisible = false }) => {
 
 
 
-            <button type="button" className="transition-all duration-300 hover:scale-110">
+            <button type="button" className="transition-all duration-300 hover:scale-110 cursor-pointer">
               <FiShoppingBag size={20} strokeWidth={1.5} />
             </button>
 
@@ -896,9 +896,8 @@ const Navbar = ({ alwaysVisible = false }) => {
 
        <nav
         ref={desktopNavRef}
-        className="fixed top-0 left-0 right-0 z-50 hidden w-full lg:block"
-        style={{ top: 0, backgroundColor: "rgba(255,255,255,0)" }}
-        onMouseEnter={() => setDesktopHovered(true)}
+        className="fixed top-0 left-0 right-0 z-50 hidden w-full lg:block border-b"
+        style={{ top: 0, backgroundColor: "rgba(255,255,255,0)", borderBottomColor: "rgba(255,255,255,0.7)" }}
         onMouseLeave={() => {
           setDesktopHovered(false);
           setActive(null);
@@ -971,40 +970,19 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="button"
               aria-label={desktopSearchOpen ? "Close search" : "Search"}
               onClick={desktopSearchOpen ? closeDesktopSearch : openDesktopSearch}
-              className="transition-all duration-300 hover:scale-110"
+              className="transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >
               {desktopSearchOpen ? <FiX size={20} /> : <FiSearch size={20} />}
             </button>
 
-
-
-            <button
-              ref={(el) => { desktopIconRefs.current[1] = el; }}
-              type="button"
-              aria-label="Wishlist"
-              className="transition-all duration-300 hover:scale-110"
-              style={{ color: "#ffffff" }}
-            >
-              <FiHeart size={20} strokeWidth={1.7} />
-            </button>
-
-            <button
-              ref={(el) => { desktopIconRefs.current[2] = el; }}
-              type="button"
-              className="transition-all duration-300 hover:scale-110"
-              style={{ color: "#ffffff" }}
-            >
-              <FiShoppingBag size={22} strokeWidth={1.5} />
-            </button>
-
             <div className="relative flex items-center justify-center">
               <button
-                ref={(el) => { desktopIconRefs.current[3] = el; }}
+                ref={(el) => { desktopIconRefs.current[1] = el; }}
                 type="button"
                 aria-label="Account"
                 onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                className="transition-all duration-300 hover:scale-110"
+                className="transition-all duration-300 hover:scale-110 cursor-pointer"
                 style={{ color: "#ffffff" }}
               >
                 <FiUser size={21} strokeWidth={1.7} />
@@ -1031,6 +1009,15 @@ const Navbar = ({ alwaysVisible = false }) => {
                 </>
               )}
             </div>
+
+            <button
+              ref={(el) => { desktopIconRefs.current[2] = el; }}
+              type="button"
+              className="transition-all duration-300 hover:scale-110 cursor-pointer"
+              style={{ color: "#ffffff" }}
+            >
+              <FiShoppingBag size={22} strokeWidth={1.5} />
+            </button>
 
           </div>
         </div>
@@ -1101,40 +1088,19 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="button"
               aria-label={desktopSearchOpen ? "Close search" : "Search"}
               onClick={desktopSearchOpen ? closeDesktopSearch : openDesktopSearch}
-              className="transition-all duration-300 hover:scale-110"
+              className="transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >
               {desktopSearchOpen ? <FiX size={22} /> : <FiSearch size={22} />}
             </button>
 
-
-
-            <button
-              ref={(el) => { desktop4kIconRefs.current[1] = el; }}
-              type="button"
-              aria-label="Wishlist"
-              className="transition-all duration-300 hover:scale-110"
-              style={{ color: "#ffffff" }}
-            >
-              <FiHeart size={22} strokeWidth={1.7} />
-            </button>
-
-            <button
-              ref={(el) => { desktop4kIconRefs.current[2] = el; }}
-              type="button"
-              className="transition-all duration-300 hover:scale-110"
-              style={{ color: "#ffffff" }}
-            >
-              <FiShoppingBag size={24} strokeWidth={1.5} />
-            </button>
-
             <div className="relative flex items-center justify-center">
               <button
-                ref={(el) => { desktop4kIconRefs.current[3] = el; }}
+                ref={(el) => { desktop4kIconRefs.current[1] = el; }}
                 type="button"
                 aria-label="Account"
                 onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                className="transition-all duration-300 hover:scale-110"
+                className="transition-all duration-300 hover:scale-110 cursor-pointer"
                 style={{ color: "#ffffff" }}
               >
                 <FiUser size={23} strokeWidth={1.7} />
@@ -1161,6 +1127,15 @@ const Navbar = ({ alwaysVisible = false }) => {
                 </>
               )}
             </div>
+
+            <button
+              ref={(el) => { desktop4kIconRefs.current[2] = el; }}
+              type="button"
+              className="transition-all duration-300 hover:scale-110 cursor-pointer"
+              style={{ color: "#ffffff" }}
+            >
+              <FiShoppingBag size={24} strokeWidth={1.5} />
+            </button>
 
           </div>
         </div>
