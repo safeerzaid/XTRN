@@ -25,6 +25,11 @@ const productSchema = new mongoose.Schema({
     min: 0,
   },
 
+  originalPrice: {
+    type: Number,
+    min: 0
+  },
+
   gender: {
     type: String,
     enum: ['men', 'women', 'unisex'],
@@ -102,4 +107,4 @@ const productSchema = new mongoose.Schema({
 )
 
 const Product = mongoose.model('product', productSchema)
-export default Product;
+export default Product;

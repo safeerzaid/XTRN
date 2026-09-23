@@ -1,5 +1,7 @@
 import express from 'express'
 import Product from '../models/Product.js'
+import User from '../models/User.js'
+import authMiddleware from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
@@ -78,8 +80,13 @@ router.get('/:id', async (req, res) => {
 
 
 // POST /api/products — create a new product
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
+    const user = await User.findById(req.user.id)
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' })
+    }
+
     const product = new Product(req.body)
     const savedProduct = await product.save()
     res.status(201).json(savedProduct)

@@ -37,13 +37,31 @@ export const signup = async (req,res) => {
       password : hashedPassword,
     })
 
+        const accessToken = generateAccessToken(newUser._id)
+    const refreshToken = generateRefreshToken(newUser._id)
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10)
+
+    newUser.refreshTokens.push({
+      tokenHash: refreshTokenHash
+    })
+
+    await newUser.save()
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
+
     const userResponse = newUser.toObject()
     delete userResponse.password
+    delete userResponse.refreshTokens
 
     res.status(201).json({
       message: 'user created successfully',
+      accessToken,
       user: userResponse
-
     })
 
   }catch(error){
@@ -68,7 +86,8 @@ export const login = async (req, res) => {
       });
     }
 
-    const user = await User.findOne({email})
+    const sanitizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: sanitizedEmail })
 
     if(!user){
       return res.status(404).json({
@@ -101,9 +120,15 @@ export const login = async (req, res) => {
     maxAge:  7 * 24 * 60 * 60 * 1000
   })
 
-  return res.status(200).json({
-    message:"login successfull",
-    accessToken
+   return res.status(200).json({
+    message: "login successfull",
+    accessToken,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
   })
 
   
@@ -136,6 +161,12 @@ export const refresh = async (req, res) => {
 
     const user = await User.findById(decoded.id)
 
+     if (!user) {
+      return res.status(401).json({
+        message: "User not found"
+      })
+    }
+
     let isValidRefreshToken = false
 
 for (const storedToken of user.refreshTokens) {
@@ -156,16 +187,18 @@ if (!isValidRefreshToken) {
   })
 }
 
-    if (!user) {
-      return res.status(401).json({
-        message: "User not found"
-      })
-    }
+   
 
-    const accessToken = generateAccessToken(user._id)
+       const accessToken = generateAccessToken(user._id)
 
     return res.status(200).json({
-      accessToken
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
     })
 
   } catch (error) {
@@ -176,3 +209,52 @@ if (!isValidRefreshToken) {
     })
   }
 }
+
+//-----logout
+// logout--------------------------------
+
+export const logout = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (refreshToken) {
+      const decoded = jwt.verify(
+        refreshToken,
+        process.env.JWT_REFRESH_SECRET
+      );
+
+      const user = await User.findById(decoded.id);
+
+      if (user) {
+        const remainingTokens = [];
+        for (const storedToken of user.refreshTokens) {
+          const isMatch = await bcrypt.compare(refreshToken, storedToken.tokenHash);
+          if (!isMatch) remainingTokens.push(storedToken);
+        }
+        user.refreshTokens = remainingTokens;
+        await user.save();
+      }
+    }
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+
+    return res.status(200).json({
+      message: "logout successfull"
+    });
+
+  } catch (error) {
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+
+    return res.status(200).json({
+      message: "logout successfull"
+    });
+  }
+};
