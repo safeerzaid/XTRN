@@ -11,7 +11,7 @@ function GenderBanners() {
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* Shop Womens */}
         <div
-          onClick={() => navigate('/featured/women')}
+          onClick={() => navigate('/women')}
           className="group relative overflow-hidden h-[100vh] bg-gray-100 cursor-pointer"
         >
           <img
@@ -33,7 +33,7 @@ function GenderBanners() {
 
         {/* Shop Mens */}
         <div
-          onClick={() => navigate('/featured/men')}
+          onClick={() => navigate('/men')}
           className="group relative overflow-hidden h-[100vh] bg-gray-100 cursor-pointer"
         >
           <img

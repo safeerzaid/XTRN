@@ -2,7 +2,7 @@ import MegaMenu from "../ui/MegaMenu";
 import navigationData from "../../data/Navigation";
 
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   FiShoppingBag,
   FiSearch,
@@ -12,16 +12,25 @@ import {
   FiHeart,
   FiChevronRight,
   FiChevronLeft,
+  FiLogOut,
 } from "react-icons/fi";
 import gsap from "gsap";
 
 import logo from "../../assets/images/logo/logo.png";
 import Login from "../Login";
 import Signup from "../Signup";
+import { useAuth } from "../../context/authContext";
+import api from "../../api/axios";
+import { clearAccessTokenStore } from "../../api/tokenStore";
 
 const Navbar = ({ alwaysVisible = false }) => {
   const navItems = ["MEN", "WOMEN", "ACCESSORIES", "SALE"];
   const navigate = useNavigate();
+  const location = useLocation();
+  const { accessToken, setAccessToken, user, logout } = useAuth();
+
+  // True whenever a valid access token is in memory (or user object is set)
+  const isLoggedIn = Boolean(accessToken) || Boolean(user);
 
   const [active, setActive] = useState(null);
   const [searchValue, setSearchValue] = useState("");
@@ -31,6 +40,18 @@ const Navbar = ({ alwaysVisible = false }) => {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
+
+  // Close modals when user logs in
+  useEffect(() => {
+    if (isLoggedIn) {
+      setLoginOpen(false);
+      setSignupOpen(false);
+    }
+  }, [isLoggedIn]);
+
+  // Ref on the dropdown wrapper — used to detect outside clicks
+  const accountDropdownRef = useRef(null);
+  const accountDropdown4kRef = useRef(null);
   
 
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -192,6 +213,55 @@ const Navbar = ({ alwaysVisible = false }) => {
 
     return []; // future-proofing: any deeper level returns empty
   };
+
+  /* ─────────────────────────────────────────────
+     LOGOUT
+  ───────────────────────────────────────────── */
+
+  const handleLogout = async () => {
+    setAccountMenuOpen(false);
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // If the request fails (e.g. already expired), still clear client-side state
+    }
+    clearAccessTokenStore();
+    logout(); // clears accessToken + user in context
+    navigate("/");
+  };
+
+  /* ─────────────────────────────────────────────
+     DROPDOWN — CLOSE ON OUTSIDE CLICK
+  ───────────────────────────────────────────── */
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const handler = (e) => {
+      if (
+        (accountDropdownRef.current && !accountDropdownRef.current.contains(e.target)) &&
+        (accountDropdown4kRef.current && !accountDropdown4kRef.current.contains(e.target))
+      ) {
+        setAccountMenuOpen(false);
+      }
+    };
+    // Defer by one tick so the click that opened the dropdown
+    // doesn't immediately trigger the outside-click handler
+    const timerId = setTimeout(() => {
+      document.addEventListener("mousedown", handler);
+    }, 0);
+    return () => {
+      clearTimeout(timerId);
+      document.removeEventListener("mousedown", handler);
+    };
+  }, [accountMenuOpen]);
+
+  /* ─────────────────────────────────────────────
+     DROPDOWN — CLOSE ON ROUTE CHANGE
+  ───────────────────────────────────────────── */
+
+  useEffect(() => {
+    setAccountMenuOpen(false);
+  }, [location.pathname]);
 
   /* ─────────────────────────────────────────────
      BODY SCROLL LOCK
@@ -671,22 +741,50 @@ const Navbar = ({ alwaysVisible = false }) => {
           ))}
         </nav>
 
-        {/* ── BOTTOM BUTTONS ─────────────────────────────────────────── */}
-        <div className="flex-shrink-0 flex flex-col gap-3 px-6 pb-8 pt-4 bg-white mt-auto">
-          <button
-            onClick={() => { closeMenu(); setSignupOpen(true); }}
-            className="w-full bg-[#3b4045] text-white py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase transition-colors hover:bg-black"
-            style={{ fontFamily: "var(--font-nav)" }}
-          >
-            Join Us
-          </button>
-          <button
-            onClick={() => { closeMenu(); setLoginOpen(true); }}
-            className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase transition-colors hover:bg-gray-50"
-            style={{ fontFamily: "var(--font-nav)" }}
-          >
-            Login
-          </button>
+        {/* ── BOTTOM BUTTONS ─ show auth state ──────────────── */}
+        <div className="flex-shrink-0 flex flex-col gap-3 px-6 pb-8 pt-4 bg-white mt-auto"
+          style={{ fontFamily: "var(--font-nav)" }}
+        >
+          {isLoggedIn ? (
+            <>
+              {/* User greeting */}
+              {user?.name && (
+                <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-gray-400 mb-1">
+                  Hi, {user.name.split(' ')[0]}
+                </p>
+              )}
+              {/* My Profile */}
+              <Link
+                to="/profile"
+                onClick={closeMenu}
+                className="w-full bg-[#3b4045] text-white py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase text-center transition-colors hover:bg-black block"
+              >
+                My Profile
+              </Link>
+              {/* Logout */}
+              <button
+                onClick={() => { closeMenu(); handleLogout(); }}
+                className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase transition-colors hover:bg-gray-50"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => { closeMenu(); setSignupOpen(true); }}
+                className="w-full bg-[#3b4045] text-white py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase transition-colors hover:bg-black"
+              >
+                Join Us
+              </button>
+              <button
+                onClick={() => { closeMenu(); setLoginOpen(true); }}
+                className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase transition-colors hover:bg-gray-50"
+              >
+                Login
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -785,6 +883,7 @@ const Navbar = ({ alwaysVisible = false }) => {
             <button
               type="button"
               aria-label="Cart"
+              onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)}
               className="flex items-center justify-center p-2 text-black outline-none"
               style={{
                 WebkitTapHighlightColor: "transparent",
@@ -880,7 +979,7 @@ const Navbar = ({ alwaysVisible = false }) => {
 
 
 
-            <button type="button" className="transition-all duration-300 hover:scale-110 cursor-pointer">
+            <button type="button" onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)} className="transition-all duration-300 hover:scale-110 cursor-pointer">
               <FiShoppingBag size={20} strokeWidth={1.5} />
             </button>
 
@@ -976,43 +1075,69 @@ const Navbar = ({ alwaysVisible = false }) => {
               {desktopSearchOpen ? <FiX size={20} /> : <FiSearch size={20} />}
             </button>
 
-            <div className="relative flex items-center justify-center">
+            {/* ── Account icon — unauthenticated: opens login modal
+                              authenticated: opens dropdown ── */}
+            <div
+              ref={accountDropdownRef}
+              className="relative flex items-center justify-center"
+              style={{ overflow: "visible" }}
+            >
               <button
                 ref={(el) => { desktopIconRefs.current[1] = el; }}
                 type="button"
                 aria-label="Account"
-                onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                onClick={() => isLoggedIn ? setAccountMenuOpen((p) => !p) : setLoginOpen(true)}
                 className="transition-all duration-300 hover:scale-110 cursor-pointer"
                 style={{ color: "#ffffff" }}
               >
                 <FiUser size={21} strokeWidth={1.7} />
               </button>
-              {accountMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setAccountMenuOpen(false)}></div>
-                  <div className="absolute right-0 top-full mt-2 w-[280px] bg-white shadow-xl border border-gray-200 flex flex-col p-5 z-50 text-black rounded-lg">
-                    <button
-                      onClick={() => { setAccountMenuOpen(false); setLoginOpen(true); }}
-                      className="w-full bg-[#3b4045] text-white py-3.5 text-[14px] tracking-[0.08em] font-semibold hover:bg-black transition-colors"
-                      style={{ fontFamily: "var(--font-nav)" }}
-                    >
-                      LOGIN
-                    </button>
-                    <button
-                      onClick={() => { setAccountMenuOpen(false); setSignupOpen(true); }}
-                      className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 mt-3 text-[14px] tracking-[0.08em] font-semibold hover:bg-gray-50 transition-colors"
-                      style={{ fontFamily: "var(--font-nav)" }}
-                    >
-                      JOIN US
-                    </button>
-                  </div>
-                </>
+
+              {/* ── Authenticated dropdown ── */}
+              {isLoggedIn && accountMenuOpen && (
+                <div
+                  className="absolute right-0 bg-white border border-gray-200 shadow-xl"
+                  style={{ top: "calc(100% + 12px)", width: 200, fontFamily: "var(--font-nav)", zIndex: 9999 }}
+                  role="menu"
+                >
+                  {/* My Account — TODO: /account page to be built in a later phase */}
+                  <Link
+                    to="/account"
+                    role="menuitem"
+                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors"
+                  >
+                    <FiUser size={15} strokeWidth={2} />
+                    My Account
+                  </Link>
+
+                  {/* Wishlist — page planned for a later phase */}
+                  <Link
+                    to="/wishlist"
+                    role="menuitem"
+                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                  >
+                    <FiHeart size={15} strokeWidth={2} />
+                    Wishlist
+                  </Link>
+
+                  {/* Logout */}
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                  >
+                    <FiLogOut size={15} strokeWidth={2} />
+                    Logout
+                  </button>
+                </div>
               )}
             </div>
 
             <button
               ref={(el) => { desktopIconRefs.current[2] = el; }}
               type="button"
+              onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)}
               className="transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >
@@ -1094,43 +1219,65 @@ const Navbar = ({ alwaysVisible = false }) => {
               {desktopSearchOpen ? <FiX size={22} /> : <FiSearch size={22} />}
             </button>
 
-            <div className="relative flex items-center justify-center">
+            {/* ── Account icon (4K) — same logic as standard desktop ── */}
+            <div
+              ref={accountDropdown4kRef}
+              className="relative flex items-center justify-center"
+              style={{ overflow: "visible" }}
+            >
               <button
                 ref={(el) => { desktop4kIconRefs.current[1] = el; }}
                 type="button"
                 aria-label="Account"
-                onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                onClick={() => isLoggedIn ? setAccountMenuOpen((p) => !p) : setLoginOpen(true)}
                 className="transition-all duration-300 hover:scale-110 cursor-pointer"
                 style={{ color: "#ffffff" }}
               >
                 <FiUser size={23} strokeWidth={1.7} />
               </button>
-              {accountMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setAccountMenuOpen(false)}></div>
-                  <div className="absolute right-0 top-full mt-2 w-[280px] bg-white shadow-xl border border-gray-200 flex flex-col p-5 z-50 text-black rounded-lg">
-                    <button
-                      onClick={() => { setAccountMenuOpen(false); setLoginOpen(true); }}
-                      className="w-full bg-[#3b4045] text-white py-3.5 text-[14px] tracking-[0.08em] font-semibold hover:bg-black transition-colors"
-                      style={{ fontFamily: "var(--font-nav)" }}
-                    >
-                      LOGIN
-                    </button>
-                    <button
-                      onClick={() => { setAccountMenuOpen(false); setSignupOpen(true); }}
-                      className="w-full bg-white text-[#3b4045] border border-gray-300 py-3.5 mt-3 text-[14px] tracking-[0.08em] font-semibold hover:bg-gray-50 transition-colors"
-                      style={{ fontFamily: "var(--font-nav)" }}
-                    >
-                      JOIN US
-                    </button>
-                  </div>
-                </>
+              
+              {/* ── Authenticated dropdown (4K) ── */}
+              {isLoggedIn && accountMenuOpen && (
+                <div
+                  className="absolute right-0 bg-white border border-gray-200 shadow-xl"
+                  style={{ top: "calc(100% + 12px)", width: 200, fontFamily: "var(--font-nav)", zIndex: 9999 }}
+                  role="menu"
+                >
+                  <Link
+                    to="/account"
+                    role="menuitem"
+                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors"
+                  >
+                    <FiUser size={15} strokeWidth={2} />
+                    My Account
+                  </Link>
+
+                  <Link
+                    to="/wishlist"
+                    role="menuitem"
+                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                  >
+                    <FiHeart size={15} strokeWidth={2} />
+                    Wishlist
+                  </Link>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                  >
+                    <FiLogOut size={15} strokeWidth={2} />
+                    Logout
+                  </button>
+                </div>
               )}
             </div>
 
             <button
               ref={(el) => { desktop4kIconRefs.current[2] = el; }}
               type="button"
+              onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)}
               className="transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >

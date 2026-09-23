@@ -1,15 +1,16 @@
 import axios from "axios"
+import { getAccessTokenStore, setAccessTokenStore, clearAccessTokenStore } from './tokenStore'
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
-   withCredentials: true
+  withCredentials: true
 })
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken')
+    const token = getAccessTokenStore()
 
-    if(token){
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
 
@@ -27,7 +28,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
       originalRequest._retry = true
 
       try {
@@ -35,13 +36,13 @@ api.interceptors.response.use(
 
         const newAccessToken = response.data.accessToken
 
-        localStorage.setItem("accessToken", newAccessToken)
+        setAccessTokenStore(newAccessToken)
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
 
         return api(originalRequest)
       } catch (refreshError) {
-        localStorage.removeItem("accessToken")
+        clearAccessTokenStore()
 
         return Promise.reject(refreshError)
       }
