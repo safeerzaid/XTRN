@@ -4,6 +4,8 @@ import api from "../api/axios";
 
 const AuthContext = createContext();
 
+let restorePromise = null;
+
 export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessTokenState] = useState(null);
   const [user, setUser] = useState(null);
@@ -31,22 +33,33 @@ export const AuthProvider = ({ children }) => {
   // is valid, 401 if not.
   // The axios interceptor is patched to NOT retry /auth/refresh on
   // 401, so this call never loops.
+
   useEffect(() => {
     let cancelled = false;
-    const restore = async () => {
-      try {
-        const res = await api.post("/auth/refresh");
+
+    if (!restorePromise) {
+      restorePromise = api.post("/auth/refresh").finally(() => {
+        restorePromise = null;
+      });
+    }
+
+    restorePromise
+      .then((res) => {
         if (!cancelled && res?.data?.accessToken) {
           setAccessToken(res.data.accessToken);
           if (res.data.user) setUser(res.data.user);
         }
-      } catch {
-        // No valid session — stay logged out
-      } finally {
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAccessToken(null);
+          setUser(null);
+        }
+      })
+      .finally(() => {
         if (!cancelled) setIsLoading(false);
-      }
-    };
-    restore();
+      });
+
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import crypto from "crypto"
 
 export const generateAccessToken = (userId) => {
   return jwt.sign(
@@ -10,8 +11,12 @@ export const generateAccessToken = (userId) => {
 
 export const generateRefreshToken = (userId) => {
   return jwt.sign(
-    { id: userId },
+    { id: userId, jti: crypto.randomUUID() },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: "7d" }
   )
+}
+
+export const hashToken = (token) => {
+  return crypto.createHash('sha256').update(token).digest('hex');
 }

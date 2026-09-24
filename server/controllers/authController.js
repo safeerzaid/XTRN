@@ -1,11 +1,19 @@
 import User from "../models/User.js"
-import { signupSchema } from "../validators/authValidator.js";
+import { signupSchema, loginSchema } from "../validators/authValidator.js";
 import bcrypt from "bcryptjs";
 import  {
   generateAccessToken,
-  generateRefreshToken
+  generateRefreshToken,
+  hashToken
 } from '../utils/token.js'
 import jwt from "jsonwebtoken"
+
+const addRefreshToken = (user, tokenHash) => {
+  user.refreshTokens.push({ tokenHash });
+  while (user.refreshTokens.length > 5) {
+    user.refreshTokens.shift();
+  }
+};
 
 export const signup = async (req,res) => {
   try{
@@ -39,11 +47,9 @@ export const signup = async (req,res) => {
 
         const accessToken = generateAccessToken(newUser._id)
     const refreshToken = generateRefreshToken(newUser._id)
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10)
+    const refreshTokenHash = hashToken(refreshToken)
 
-    newUser.refreshTokens.push({
-      tokenHash: refreshTokenHash
-    })
+    addRefreshToken(newUser, refreshTokenHash)
 
     await newUser.save()
 
@@ -78,16 +84,17 @@ export const signup = async (req,res) => {
 export const login = async (req, res) => {
   try {
 
-    const { email, password } = req.body;
+    const result = loginSchema.safeParse(req.body)
 
-    if (!email || !password) {
+    if (!result.success) {
       return res.status(400).json({
-        message: "Please fill all the fields",
+        message: "Invalid login data",
       });
     }
 
-    const sanitizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ email: sanitizedEmail })
+    const { email, password } = result.data;
+
+    const user = await User.findOne({ email })
 
     if(!user){
       return res.status(404).json({
@@ -105,11 +112,9 @@ export const login = async (req, res) => {
 
   const accessToken = generateAccessToken(user._id)
   const refreshToken = generateRefreshToken(user._id)
-  const refreshTokenHash =await bcrypt.hash(refreshToken, 10)
+  const refreshTokenHash = hashToken(refreshToken)
 
-  user.refreshTokens.push({
-    tokenHash: refreshTokenHash
-  })
+  addRefreshToken(user, refreshTokenHash)
 
   await user.save()
 
@@ -167,29 +172,37 @@ export const refresh = async (req, res) => {
       })
     }
 
-    let isValidRefreshToken = false
+    const incomingHash = hashToken(refreshToken)
+    const tokenExists = user.refreshTokens.some(t => t.tokenHash === incomingHash)
 
-for (const storedToken of user.refreshTokens) {
-  const isMatch = await bcrypt.compare(
-    refreshToken,
-    storedToken.tokenHash
-  )
+    if (!tokenExists) {
+      user.refreshTokens = []
+      await user.save()
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+      })
+      return res.status(401).json({
+        message: "Session expired. Please log in again."
+      })
+    }
 
-  if (isMatch) {
-    isValidRefreshToken = true
-    break
-  }
-}
+    user.refreshTokens = user.refreshTokens.filter(t => t.tokenHash !== incomingHash)
 
-if (!isValidRefreshToken) {
-  return res.status(401).json({
-    message: "Invalid refresh token"
-  })
-}
+    const newRefreshToken = generateRefreshToken(user._id)
+    const newRefreshTokenHash = hashToken(newRefreshToken)
+    addRefreshToken(user, newRefreshTokenHash)
+    await user.save()
 
-   
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
 
-       const accessToken = generateAccessToken(user._id)
+    const accessToken = generateAccessToken(user._id)
 
     return res.status(200).json({
       accessToken,
@@ -226,12 +239,8 @@ export const logout = async (req, res) => {
       const user = await User.findById(decoded.id);
 
       if (user) {
-        const remainingTokens = [];
-        for (const storedToken of user.refreshTokens) {
-          const isMatch = await bcrypt.compare(refreshToken, storedToken.tokenHash);
-          if (!isMatch) remainingTokens.push(storedToken);
-        }
-        user.refreshTokens = remainingTokens;
+        const hash = hashToken(refreshToken);
+        user.refreshTokens = user.refreshTokens.filter(t => t.tokenHash !== hash);
         await user.save();
       }
     }

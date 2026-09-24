@@ -21,6 +21,9 @@ api.interceptors.request.use(
   }
 )
 
+let isRefreshing = false;
+let refreshQueue = [];
+
 api.interceptors.response.use(
   (response) => {
     return response
@@ -28,23 +31,45 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
+    if (
+      error.response?.status === 401 && 
+      !originalRequest._retry && 
+      !originalRequest.url?.includes('/auth/refresh') &&
+      !originalRequest.url?.includes('/auth/login')
+    ) {
       originalRequest._retry = true
+
+      if (isRefreshing) {
+        return new Promise(function(resolve, reject) {
+          refreshQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return api(originalRequest)
+        }).catch(err => {
+          return Promise.reject(err)
+        })
+      }
+
+      isRefreshing = true
 
       try {
         const response = await api.post("/auth/refresh")
-
         const newAccessToken = response.data.accessToken
 
         setAccessTokenStore(newAccessToken)
 
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+        refreshQueue.forEach(p => p.resolve(newAccessToken))
+        refreshQueue = []
 
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
         return api(originalRequest)
       } catch (refreshError) {
+        refreshQueue.forEach(p => p.reject(refreshError))
+        refreshQueue = []
         clearAccessTokenStore()
-
         return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
       }
     }
 
