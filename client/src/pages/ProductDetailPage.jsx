@@ -6,6 +6,7 @@ import NavBar from "../components/layout/NavBar";
 import Footer from "../components/layout/Footer";
 import ProductListCard from "../components/ui/ProductListCard";
 import api from "../api/axios";
+import useCartStore from "../store/cartStore";
 
 function ProductDetailPage() {
   const [product, setProduct] = useState(null);
@@ -14,7 +15,9 @@ function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedSize, setSelectedSize] = useState("");
-  
+  const [sizeError, setSizeError] = useState(false);
+
+  const addItem = useCartStore((state) => state.addItem);
 
   const { id } = useParams();
 
@@ -23,7 +26,6 @@ function ProductDetailPage() {
     setProduct(null);
     setRelatedProducts([]);
 
-    // Fire both requests in parallel — eliminates the waterfall delay
     Promise.all([
       api.get(`/products/${id}`),
       api.get("/products"),
@@ -34,9 +36,16 @@ function ProductDetailPage() {
         
         setProduct(data)
         setSelectedImage(data.images.default[0]);
+
+        // Oru size mathrame ullenkil, automatic-aayi select cheyyuka
+        if (data.sizes && data.sizes.length === 1) {
+          setSelectedSize(data.sizes[0]);
+        } else {
+          setSelectedSize("");
+        }
+
         setLoading(false);
 
-        // 1. Same subcategory
         let filtered = allProduct.filter(
           (item) =>
             item._id !== id &&
@@ -45,7 +54,6 @@ function ProductDetailPage() {
             item.subcategory === data.subcategory
         );
 
-        // 2. If less than 4, fill with same category
         if (filtered.length < 4) {
           const sameCategory = allProduct.filter(
             (item) =>
@@ -57,7 +65,6 @@ function ProductDetailPage() {
           filtered = [...filtered, ...sameCategory];
         }
 
-        // 3. If still less than 4, fill with same gender
         if (filtered.length < 4) {
           const sameGender = allProduct.filter(
             (item) =>
@@ -76,6 +83,22 @@ function ProductDetailPage() {
       });
   }, [id]);
 
+
+  // --------------------------------
+  // ADD TO CART
+  // --------------------------------
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      setSizeError(true);
+      return;
+    }
+
+    setSizeError(false);
+    addItem(product._id, selectedSize, quantity);
+  };
+
+
   if (loading) return null;
   if (!product) return <h2>Product not found.</h2>;
 
@@ -90,7 +113,6 @@ function ProductDetailPage() {
           {/* ── LEFT: Image Gallery ─────────────────────────────── */}
           <div className="w-full lg:w-[50%] flex flex-col lg:flex-row lg:gap-3">
 
-            {/* Thumbnail Strip */}
             <div className="order-2 lg:order-1 flex flex-row lg:flex-col gap-3 mt-3 lg:mt-0 overflow-x-auto lg:overflow-y-auto lg:overflow-x-hidden py-2 lg:pr-2">
               {product.images.default.map((image, index) => (
                 <button
@@ -122,7 +144,6 @@ function ProductDetailPage() {
               ))}
             </div>
 
-            {/* Main Image */}
             <div className="order-1 lg:order-2 flex-1 aspect-square rounded-2xl bg-gray-100 overflow-hidden">
               <img
                 src={selectedImage}
@@ -136,7 +157,6 @@ function ProductDetailPage() {
           {/* ── RIGHT: Product Information ──────────────────────── */}
           <div className="w-full lg:w-[50%] mt-6 lg:mt-0 lg:sticky lg:top-28 lg:self-start">
 
-            {/* Name + Price */}
             <div className="flex flex-col gap-2">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 leading-tight font-nav">
                 {product.name}
@@ -155,7 +175,6 @@ function ProductDetailPage() {
 
           <div className="my-4 lg:my-6 border-t border-gray-300"></div>
 
-            {/* Description */}
             <div className="mt-2 lg:mt-4">
               <h2 className="text-base lg:text-lg font-semibold text-gray-900 font-nav">Description</h2>
               <p className="mt-1 text-sm lg:text-base text-gray-500 leading-7 font-nav">{product.description}</p>
@@ -168,7 +187,7 @@ function ProductDetailPage() {
                 <button
                   key={size}
                   type="button"
-                  onClick={() => setSelectedSize(size)}
+                  onClick={() => { setSelectedSize(size); setSizeError(false); }}
                   className={`
                     w-12 h-12 rounded-sm border font-nav font-medium transition-all duration-200
                     ${selectedSize === size
@@ -183,12 +202,12 @@ function ProductDetailPage() {
           )}
           </div>
 
-            {/* ── MOBILE: Quantity + Heart (50/50), then full-width Add to Cart ── */}
-            {/* ── DESKTOP (sm+): all three in one row ── */}
+          {sizeError && (
+            <p className="text-red-500 text-sm mt-2 font-nav">Please select a size</p>
+          )}
 
             {/* Row 1 (mobile only): Quantity stepper + Heart button side by side */}
             <div className="mt-6 flex gap-3 sm:hidden">
-              {/* Quantity — takes half */}
               <div className="flex flex-1 items-center justify-between border border-gray-300 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
@@ -207,7 +226,6 @@ function ProductDetailPage() {
                 </button>
               </div>
 
-              {/* Wishlist — takes half */}
               <button
                 type="button"
                 aria-label="Add to wishlist"
@@ -230,6 +248,7 @@ function ProductDetailPage() {
             {/* Row 2 (mobile only): Full-width Add to Cart */}
             <div className="mt-3 sm:hidden">
               <button
+                onClick={handleAddToCart}
                 className="
                   font-nav w-full h-12 rounded-xl
                   bg-black text-white font-semibold
@@ -242,7 +261,6 @@ function ProductDetailPage() {
 
             {/* Desktop (sm+): Quantity + Add to Cart + Heart in one row */}
             <div className="hidden sm:flex mt-8 gap-4">
-              {/* Quantity */}
               <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
@@ -261,8 +279,8 @@ function ProductDetailPage() {
                 </button>
               </div>
 
-              {/* Add to Cart */}
               <button
+                onClick={handleAddToCart}
                 className="
                   font-nav flex-1 h-12 rounded-xl
                   bg-black text-white font-semibold
@@ -272,7 +290,6 @@ function ProductDetailPage() {
                 Add to Cart
               </button>
 
-              {/* Wishlist */}
               <button
                 type="button"
                 aria-label="Add to wishlist"
@@ -296,10 +313,8 @@ function ProductDetailPage() {
         </div>
       </main>
 
-      {/* Related Products */}
-                <section className="max-w-[1280px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-24 mb-20">
+      <section className="max-w-[1280px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-24 mb-20">
 
-  {/* Section Heading */}
   <div className="flex items-center justify-between mb-8">
 
     <h2 className="text-3xl font-semibold font-nav text-gray-900">
@@ -308,7 +323,6 @@ function ProductDetailPage() {
 
   </div>
 
-  {/* Products Grid */}
   <div className="grid grid-cols-2 lg:grid-cols-4  lg:gap-2">
 
         {relatedProducts.map((item) => (

@@ -4,10 +4,12 @@ import {
   FiShoppingBag,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import useCartStore from "../../store/cartStore";
 
 
 function ProductListCard({ product, pageType = "sport" }) {
 
+  const addItem = useCartStore((state) => state.addItem);
 
 
   // --------------------------------
@@ -79,6 +81,25 @@ function ProductListCard({ product, pageType = "sport" }) {
 
 
   // --------------------------------
+  // ADD TO CART (quick-add, first available size)
+  // --------------------------------
+
+  const handleQuickAdd = (e) => {
+    e.preventDefault();   // Link navigation thadayuka
+    e.stopPropagation();  // Card click bubble aavathe thadayuka
+
+    const defaultSize = product.sizes?.[0];
+
+    if (!defaultSize) {
+      console.log("No size available for this product");
+      return;
+    }
+
+    addItem(product._id, defaultSize, 1);
+  };
+
+
+  // --------------------------------
   // CARD UI
   // --------------------------------
 
@@ -103,7 +124,7 @@ function ProductListCard({ product, pageType = "sport" }) {
           <button
             type="button"
             aria-label="Add to wishlist"
-            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-105 text-black"
+            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-105 text-black hover:bg-black hover:text-white"
           >
             <FiHeart size={15} strokeWidth={2} />
           </button>
@@ -126,7 +147,8 @@ function ProductListCard({ product, pageType = "sport" }) {
           <button
             type="button"
             aria-label="Add to cart"
-            className="absolute right-3 bottom-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-105 text-black"
+            onClick={handleQuickAdd}
+            className="absolute right-3 bottom-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-105 text-black hover:bg-black hover:text-white"
           >
             <FiShoppingBag size={15} strokeWidth={2} />
           </button>

@@ -14,6 +14,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import api from './api/axios';
 import { useAuth } from './context/authContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import CartPage from './pages/CartPage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -125,6 +126,10 @@ function App() {
           <Route 
              path='/profile'
              element={<Profile/>}
+          />
+          <Route 
+             path='/cart'
+             element={<CartPage/>}
           />
         </Route>
 

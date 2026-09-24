@@ -13,6 +13,7 @@ import {
   FiChevronRight,
   FiChevronLeft,
   FiLogOut,
+  FiClock,
 } from "react-icons/fi";
 import gsap from "gsap";
 
@@ -22,12 +23,14 @@ import Signup from "../Signup";
 import { useAuth } from "../../context/authContext";
 import api from "../../api/axios";
 import { clearAccessTokenStore } from "../../api/tokenStore";
+import useCartStore from "../../store/cartStore";
 
 const Navbar = ({ alwaysVisible = false }) => {
   const navItems = ["MEN", "WOMEN", "ACCESSORIES", "SALE"];
   const navigate = useNavigate();
   const location = useLocation();
   const { accessToken, setAccessToken, user, logout } = useAuth();
+  const itemCount = useCartStore((state) => state.getItemCount());
 
   // True whenever a valid access token is in memory (or user object is set)
   const isLoggedIn = Boolean(accessToken) || Boolean(user);
@@ -761,6 +764,14 @@ const Navbar = ({ alwaysVisible = false }) => {
               >
                 My Profile
               </Link>
+              {/* Order History */}
+              <Link
+                to="/orders"
+                onClick={closeMenu}
+                className="w-full bg-[#3b4045] text-white border-t border-gray-600 py-3.5 text-[13px] tracking-[0.08em] font-semibold uppercase text-center transition-colors hover:bg-black block"
+              >
+                Order History
+              </Link>
               {/* Logout */}
               <button
                 onClick={() => { closeMenu(); handleLogout(); }}
@@ -884,7 +895,7 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="button"
               aria-label="Cart"
               onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)}
-              className="flex items-center justify-center p-2 text-black outline-none"
+              className="relative flex items-center justify-center p-2 text-black outline-none"
               style={{
                 WebkitTapHighlightColor: "transparent",
                 WebkitAppearance: "none",
@@ -892,6 +903,11 @@ const Navbar = ({ alwaysVisible = false }) => {
               }}
             >
               <FiShoppingBag size={21} strokeWidth={1.7} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
             </button>
 
 
@@ -979,8 +995,13 @@ const Navbar = ({ alwaysVisible = false }) => {
 
 
 
-            <button type="button" onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)} className="transition-all duration-300 hover:scale-110 cursor-pointer">
+            <button type="button" onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)} className="relative transition-all duration-300 hover:scale-110 cursor-pointer">
               <FiShoppingBag size={20} strokeWidth={1.5} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
             </button>
 
 
@@ -1096,40 +1117,58 @@ const Navbar = ({ alwaysVisible = false }) => {
               {/* ── Authenticated dropdown ── */}
               {isLoggedIn && accountMenuOpen && (
                 <div
-                  className="absolute right-0 bg-white border border-gray-200 shadow-xl"
-                  style={{ top: "calc(100% + 12px)", width: 200, fontFamily: "var(--font-nav)", zIndex: 9999 }}
+                  className="absolute left-1/2 -translate-x-1/2 bg-white border border-gray-200 shadow-xl py-2"
+                  style={{ top: "calc(100% + 12px)", width: 280, fontFamily: "var(--font-nav)", zIndex: 9999 }}
                   role="menu"
                 >
                   {/* My Account — TODO: /account page to be built in a later phase */}
                   <Link
                     to="/account"
                     role="menuitem"
-                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
                     <FiUser size={15} strokeWidth={2} />
-                    My Account
+                    My account
                   </Link>
+
+                  <hr className="mx-5 border-gray-100" />
 
                   {/* Wishlist — page planned for a later phase */}
                   <Link
                     to="/wishlist"
                     role="menuitem"
-                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                    className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
                     <FiHeart size={15} strokeWidth={2} />
                     Wishlist
                   </Link>
 
-                  {/* Logout */}
-                  <button
-                    type="button"
+                  <hr className="mx-5 border-gray-100" />
+
+                  {/* Order History */}
+                  <Link
+                    to="/orders"
                     role="menuitem"
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                    className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
-                    <FiLogOut size={15} strokeWidth={2} />
-                    Logout
-                  </button>
+                    <FiClock size={15} strokeWidth={2} />
+                    Order history
+                  </Link>
+
+                  <hr className="mx-5 border-gray-100" />
+
+                  {/* Logout */}
+                  <div className="p-4 pt-2">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="flex w-full items-center justify-center gap-2 bg-black py-3 text-[14px] font-medium text-white transition-transform active:scale-95 hover:bg-gray-800"
+                    >
+                      <FiLogOut size={15} strokeWidth={2} />
+                      Logout
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1138,10 +1177,15 @@ const Navbar = ({ alwaysVisible = false }) => {
               ref={(el) => { desktopIconRefs.current[2] = el; }}
               type="button"
               onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)}
-              className="transition-all duration-300 hover:scale-110 cursor-pointer"
+              className="relative transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >
               <FiShoppingBag size={22} strokeWidth={1.5} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
             </button>
 
           </div>
@@ -1239,37 +1283,54 @@ const Navbar = ({ alwaysVisible = false }) => {
               {/* ── Authenticated dropdown (4K) ── */}
               {isLoggedIn && accountMenuOpen && (
                 <div
-                  className="absolute right-0 bg-white border border-gray-200 shadow-xl"
-                  style={{ top: "calc(100% + 12px)", width: 200, fontFamily: "var(--font-nav)", zIndex: 9999 }}
+                  className="absolute left-1/2 -translate-x-1/2 bg-white border border-gray-200 shadow-xl py-2"
+                  style={{ top: "calc(100% + 12px)", width: 280, fontFamily: "var(--font-nav)", zIndex: 9999 }}
                   role="menu"
                 >
                   <Link
                     to="/account"
                     role="menuitem"
-                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
                     <FiUser size={15} strokeWidth={2} />
-                    My Account
+                    My account
                   </Link>
+
+                  <hr className="mx-5 border-gray-100" />
 
                   <Link
                     to="/wishlist"
                     role="menuitem"
-                    className="flex items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                    className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
                     <FiHeart size={15} strokeWidth={2} />
                     Wishlist
                   </Link>
 
-                  <button
-                    type="button"
+                  <hr className="mx-5 border-gray-100" />
+
+                  <Link
+                    to="/orders"
                     role="menuitem"
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-5 py-3.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-black hover:bg-gray-50 transition-colors border-t border-gray-100"
+                    className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
-                    <FiLogOut size={15} strokeWidth={2} />
-                    Logout
-                  </button>
+                    <FiClock size={15} strokeWidth={2} />
+                    Order history
+                  </Link>
+
+                  <hr className="mx-5 border-gray-100" />
+
+                  <div className="p-4 pt-2">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      className="flex w-full items-center justify-center gap-2 bg-black py-3 text-[14px] font-medium text-white transition-transform active:scale-95 hover:bg-gray-800"
+                    >
+                      <FiLogOut size={15} strokeWidth={2} />
+                      Logout
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1278,10 +1339,15 @@ const Navbar = ({ alwaysVisible = false }) => {
               ref={(el) => { desktop4kIconRefs.current[2] = el; }}
               type="button"
               onClick={() => isLoggedIn ? navigate('/cart') : setLoginOpen(true)}
-              className="transition-all duration-300 hover:scale-110 cursor-pointer"
+              className="relative transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >
               <FiShoppingBag size={24} strokeWidth={1.5} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
             </button>
 
           </div>

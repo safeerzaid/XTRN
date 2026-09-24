@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { IoClose } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/images/logo/logo.png';
 import api from "../api/axios";
 import { useAuth } from "../context/authContext";
@@ -12,6 +12,7 @@ const Signup = ({ onClose, onLoginClick }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { setAccessToken, setUser } = useAuth();
 
   const handleClose = () => {
@@ -26,7 +27,7 @@ const Signup = ({ onClose, onLoginClick }) => {
     if (onLoginClick) {
       onLoginClick();
     } else {
-      navigate('/login');
+      navigate('/login', { state: location.state });
     }
   };
 

@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         setIsLoading,
         logout,
+        isLoggedIn: !!accessToken,
       }}
     >
       {children}
