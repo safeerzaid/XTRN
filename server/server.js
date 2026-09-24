@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import helmet from "helmet"
 import cookieParser from "cookie-parser";
+import { sanitizeInput } from './middleware/sanitize.js'
 
 import express from "express";
 import cors from "cors";
@@ -21,6 +22,7 @@ app.use(cors({
 app.use(helmet())
 app.use(express.json());
 app.use(cookieParser())
+app.use(sanitizeInput)
 
 connectDB();
 
@@ -32,6 +34,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/cart", cartRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 
