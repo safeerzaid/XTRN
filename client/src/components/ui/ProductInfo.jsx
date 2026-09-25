@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { FiHeart, FiShoppingBag, FiStar } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import { useWishlist } from "../../context/WishlistContext";
+import { useAuth } from "../../context/authContext";
 
 /**
  * ProductInfo
@@ -23,8 +26,12 @@ function ProductInfo({ product = {} }) {
 
   const [qty, setQty]             = useState(1);
   const [selectedSize, setSize]   = useState(null);
-  const [wishlisted, setWish]     = useState(false);
   const [addedToCart, setCart]    = useState(false);
+
+  const { isLoggedIn } = useAuth();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const navigate = useNavigate();
+  const wishlisted = isWishlisted(product._id);
 
   const formatPrice = (p) =>
     p != null ? `₹${Number(p).toLocaleString("en-IN")}` : null;
@@ -234,7 +241,13 @@ function ProductInfo({ product = {} }) {
           type="button"
           id="wishlist-btn"
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          onClick={() => setWish((w) => !w)}
+          onClick={() => {
+            if (!isLoggedIn) {
+              navigate('/login');
+            } else {
+              toggleWishlist(product);
+            }
+          }}
           className={`
             order-2 sm:order-none
             h-14

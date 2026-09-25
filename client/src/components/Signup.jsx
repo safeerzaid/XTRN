@@ -55,13 +55,12 @@ const Signup = ({ onClose, onLoginClick }) => {
       setAccessToken(response.data.accessToken);
       setUser(response.data.user);
 
-      console.log("Signup success:", response.data);
       handleClose();
 
     } catch (error) {
       const msg = error.response?.data?.message || (error.response ? "Signup failed. Please try again." : "Cannot connect to server.");
       setErrorMessage(msg);
-      console.error("Signup failed:", msg, error);
+      console.error("Signup failed:", msg);
     }
   };
 

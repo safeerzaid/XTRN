@@ -446,12 +446,12 @@ const Navbar = ({ alwaysVisible = false }) => {
     const logos = [desktopLogoRef.current, desktop4kLogoRef.current].filter(Boolean);
 
     if (shouldBeWhite) {
-      gsap.to(nav, { backgroundColor: "#ffffff", borderBottomColor: "rgba(0,0,0,0)", duration: 0.35, ease: "power2.out" });
+      gsap.to(nav, { backgroundColor: "#ffffff", borderBottomColor: alwaysVisible ? "#e5e7eb" : "rgba(0,0,0,0)", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopTexts, ...desktop4kTexts], { color: "#000000", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopIcons, ...desktop4kIcons], { color: "#000000", duration: 0.35, ease: "power2.out" });
       gsap.to(logos, { filter: "brightness(0)", duration: 0.35, ease: "power2.out" });
     } else {
-      gsap.to(nav, { backgroundColor: "rgba(255,255,255,0)", borderBottomColor: "rgba(255,255,255,0.7)", duration: 0.35, ease: "power2.out" });
+      gsap.to(nav, { backgroundColor: "rgba(255,255,255,0)", borderBottomColor: "rgba(0,0,0,0)", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopTexts, ...desktop4kTexts], { color: "#ffffff", duration: 0.35, ease: "power2.out" });
       gsap.to([...desktopIcons, ...desktop4kIcons], { color: "#ffffff", duration: 0.35, ease: "power2.out" });
       gsap.to(logos, { filter: "none", duration: 0.35, ease: "power2.out" });
@@ -805,7 +805,7 @@ const Navbar = ({ alwaysVisible = false }) => {
 
       <div className="fixed top-0 left-0 right-0 z-50 w-full md:hidden" style={{ top: 0 }}>
         <div
-          className="relative flex h-16 w-full items-center bg-white px-5 border-b border-gray-200"
+          className={`relative flex h-16 w-full items-center bg-white px-5 ${alwaysVisible ? 'border-b border-gray-200' : ''}`}
           style={{
             WebkitTapHighlightColor: "transparent",
             touchAction: "manipulation",
@@ -1016,8 +1016,8 @@ const Navbar = ({ alwaysVisible = false }) => {
 
        <nav
         ref={desktopNavRef}
-        className="fixed top-0 left-0 right-0 z-50 hidden w-full lg:block border-b"
-        style={{ top: 0, backgroundColor: "rgba(255,255,255,0)", borderBottomColor: "rgba(255,255,255,0.7)" }}
+        className={`fixed top-0 left-0 right-0 z-50 hidden w-full lg:block ${alwaysVisible ? 'border-b' : ''}`}
+        style={{ top: 0, backgroundColor: "rgba(255,255,255,0)", borderBottomColor: alwaysVisible ? "#e5e7eb" : "rgba(0,0,0,0)" }}
         onMouseLeave={() => {
           setDesktopHovered(false);
           setActive(null);
@@ -1121,9 +1121,9 @@ const Navbar = ({ alwaysVisible = false }) => {
                   style={{ top: "calc(100% + 12px)", width: 280, fontFamily: "var(--font-nav)", zIndex: 9999 }}
                   role="menu"
                 >
-                  {/* My Account — TODO: /account page to be built in a later phase */}
+                  {/* My Account */}
                   <Link
-                    to="/account"
+                    to="/profile"
                     role="menuitem"
                     className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
@@ -1133,9 +1133,10 @@ const Navbar = ({ alwaysVisible = false }) => {
 
                   <hr className="mx-5 border-gray-100" />
 
-                  {/* Wishlist — page planned for a later phase */}
+                  {/* Wishlist */}
                   <Link
-                    to="/wishlist"
+                    to="/profile"
+                    state={{ tab: 'wishlist' }}
                     role="menuitem"
                     className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
@@ -1288,7 +1289,7 @@ const Navbar = ({ alwaysVisible = false }) => {
                   role="menu"
                 >
                   <Link
-                    to="/account"
+                    to="/profile"
                     role="menuitem"
                     className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >
@@ -1299,7 +1300,8 @@ const Navbar = ({ alwaysVisible = false }) => {
                   <hr className="mx-5 border-gray-100" />
 
                   <Link
-                    to="/wishlist"
+                    to="/profile"
+                    state={{ tab: 'wishlist' }}
                     role="menuitem"
                     className="flex items-center gap-3 px-5 py-4 text-[14px] font-medium text-black hover:bg-gray-50 transition-colors"
                   >

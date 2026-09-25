@@ -54,13 +54,12 @@ const Login = ({ onClose, onSignupClick }) => {
       setAccessToken(response.data.accessToken);
       if (response.data.user) setUser(response.data.user);
 
-      console.log("Login success:", response.data);
       handleClose();
 
     } catch (error) {
       const msg = error.response?.data?.message || (error.response ? "Login failed. Please check your credentials." : "Cannot connect to server. Please ensure the backend is running.");
       setErrorMessage(msg);
-      console.error("Login failed:", msg, error);
+      console.error("Login failed:", msg);
     }
   };
 

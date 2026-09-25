@@ -236,7 +236,7 @@ function ProductListingPage({ pageType = "sport" }) {
         ) : (
           /* Standard pages: category + price + size drawer */
           <div className="space-y-6">
-            {genderOptions.length > 0 && (
+            {pageType !== 'accessories' && genderOptions.length > 0 && (
               <FilterSection title="Gender" activeCount={selectedGenders.size}>
                 <div className="space-y-2">
                   {genderOptions.map((gen) => (
@@ -323,7 +323,7 @@ function ProductListingPage({ pageType = "sport" }) {
           ) : (
             /* Standard pages: Category + Price + Size only */
             <>
-              {genderOptions.length > 0 && (
+              {pageType !== 'accessories' && genderOptions.length > 0 && (
                 <FilterSection title="Gender" activeCount={selectedGenders.size}>
                   <div className="space-y-2">
                     {genderOptions.map((gen) => (

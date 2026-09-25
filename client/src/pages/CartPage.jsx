@@ -91,7 +91,9 @@ function CartPage() {
                         <div>
                           <h3 className="text-lg font-bold uppercase tracking-wide text-black mb-1">{product.name}</h3>
                           <p className="text-sm text-gray-500 capitalize mb-1">{product.category}</p>
-                          <p className="text-sm text-gray-500 font-medium mt-3">Size: <span className="text-black uppercase">{item.size}</span></p>
+                          {product.sizes?.length > 1 && (
+                            <p className="text-sm text-gray-500 font-medium mt-3">Size: <span className="text-black uppercase">{item.size}</span></p>
+                          )}
                         </div>
                         <p className="text-lg font-semibold text-black">${product.price.toFixed(2)}</p>
                       </div>
@@ -118,7 +120,7 @@ function CartPage() {
                         {/* Remove Button */}
                         <button 
                           onClick={() => removeItem(item._id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                          className="text-gray-400 hover:text-black transition-colors p-2"
                           aria-label="Remove item"
                         >
                           <FiTrash2 size={18} />

@@ -3,14 +3,18 @@ import {
   FiHeart,
   FiShoppingBag,
 } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useCartStore from "../../store/cartStore";
+import { useWishlist } from "../../context/WishlistContext";
+import { useAuth } from "../../context/authContext";
 
 
 function ProductListCard({ product, pageType = "sport" }) {
-
   const addItem = useCartStore((state) => state.addItem);
-
+  const { isLoggedIn } = useAuth();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const navigate = useNavigate();
+  const wishlisted = isWishlisted(product._id);
 
   // --------------------------------
   // GET PRODUCT IMAGE
@@ -124,9 +128,20 @@ function ProductListCard({ product, pageType = "sport" }) {
           <button
             type="button"
             aria-label="Add to wishlist"
-            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm transition hover:scale-105 text-black hover:bg-black hover:text-white"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!isLoggedIn) {
+                navigate('/login');
+              } else {
+                toggleWishlist(product);
+              }
+            }}
+            className={`absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition hover:scale-105 ${
+              wishlisted ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'
+            }`}
           >
-            <FiHeart size={15} strokeWidth={2} />
+            <FiHeart size={15} strokeWidth={2} className={wishlisted ? "fill-white" : ""} />
           </button>
 
           {/* HOVER PRODUCT IMAGE */}
