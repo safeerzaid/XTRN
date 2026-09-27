@@ -11,7 +11,7 @@ export const getCart = async (req, res) => {
 
     res.status(200).json(cart)
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch cart', error: error.message })
+    res.status(500).json({ message: 'Failed to fetch cart' })
   }
 }
 
@@ -46,7 +46,7 @@ export const addToCart = async (req, res) => {
     const populatedCart = await cart.populate('items.product')
     res.status(200).json(populatedCart)
   } catch (error) {
-    res.status(500).json({ message: 'Failed to add item to cart', error: error.message })
+    res.status(500).json({ message: 'Failed to add item to cart' })
   }
 }
 
@@ -79,7 +79,7 @@ export const updateCartItem = async (req, res) => {
     const populatedCart = await cart.populate('items.product')
     res.status(200).json(populatedCart)
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update cart item', error: error.message })
+    res.status(500).json({ message: 'Failed to update cart item' })
   }
 }
 
@@ -101,6 +101,6 @@ export const removeCartItem = async (req, res) => {
     const populatedCart = await cart.populate('items.product')
     res.status(200).json(populatedCart)
   } catch (error) {
-    res.status(500).json({ message: 'Failed to remove cart item', error: error.message })
+    res.status(500).json({ message: 'Failed to remove cart item' })
   }
 }

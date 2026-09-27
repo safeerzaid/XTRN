@@ -11,6 +11,8 @@ const Signup = ({ onClose, onLoginClick }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { setAccessToken, setUser } = useAuth();
@@ -42,8 +44,9 @@ const Signup = ({ onClose, onLoginClick }) => {
     const handleSignup = async (e) => {
     e.preventDefault();
 
-    if (!isFormValid) return;
+    if (!isFormValid || isSubmitting) return;
     setErrorMessage('');
+    setIsSubmitting(true);
 
     try {
       const response = await api.post("/auth/signup", {
@@ -53,14 +56,15 @@ const Signup = ({ onClose, onLoginClick }) => {
       });
 
       setAccessToken(response.data.accessToken);
-      setUser(response.data.user);
+      if (response.data.user) setUser(response.data.user);
 
-      handleClose();
-
+      setIsSuccess(true);
     } catch (error) {
       const msg = error.response?.data?.message || (error.response ? "Signup failed. Please try again." : "Cannot connect to server.");
       setErrorMessage(msg);
       console.error("Signup failed:", msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -87,6 +91,7 @@ const Signup = ({ onClose, onLoginClick }) => {
           </h2>
         </div>
 
+        {!isSuccess && (
         <form onSubmit={handleSignup} className="flex flex-col gap-3 sm:gap-5">
           {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-xs sm:text-sm px-3 py-2 rounded-lg text-center">
@@ -150,14 +155,28 @@ const Signup = ({ onClose, onLoginClick }) => {
 
           <button
             type="submit"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isSubmitting}
             className={`w-full h-[40px] sm:h-[50px] rounded-full font-bold text-white mt-1 sm:mt-2 transition-colors uppercase tracking-[0.08em] ${
-              isFormValid ? 'bg-[#3b4045] hover:bg-black' : 'bg-gray-300 cursor-not-allowed'
+              isFormValid && !isSubmitting ? 'bg-[#3b4045] hover:bg-black' : 'bg-gray-300 cursor-not-allowed'
             }`}
           >
-            Join Us
+            {isSubmitting ? 'Signing up...' : 'Join Us'}
           </button>
         </form>
+        )}
+
+        {isSuccess && (
+          <div className="flex flex-col items-center mt-4">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-center text-gray-700 text-sm sm:text-base font-medium px-4">
+              Welcome! Your account is ready. We've also sent a verification link to <strong>{email}</strong> — verify it before placing an order.
+            </p>
+          </div>
+        )}
 
         <div className="mt-5 text-center">
           <p className="text-sm text-gray-500">

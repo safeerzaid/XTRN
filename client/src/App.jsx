@@ -7,6 +7,10 @@ import ProductDetailPage from './pages/ProductDetailPage'
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Profile from "./pages/Profile";
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
+import SearchResultsPage from './pages/SearchResultsPage';
 import { useEffect } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
@@ -15,6 +19,9 @@ import api from './api/axios';
 import { useAuth } from './context/authContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import Layout from './components/layout/Layout';
+import NotFound from './pages/NotFound';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -56,83 +63,52 @@ function App() {
     <div>
       <Routes>
 
-        {/* Home */}
-        <Route
-          path='/'
-          element={<Home />}
-        />
+        <Route element={<Layout />}>
+          {/* Home */}
+          <Route path='/' element={<Home />} />
 
-        {/* Community */}
-        <Route 
-          path='/community'
-          element={<CommunityPage />}
-        />
+          {/* Search Results */}
+          <Route path='/search' element={<SearchResultsPage />} />
 
-        {/* Sports — /products/:sport (e.g. /products/football) */}
-        <Route
-          path='/products/:sport'
-          element={<ProductListingPage pageType="sport" />}
-        />
+          {/* Community */}
+          <Route path='/community' element={<CommunityPage />} />
 
-        {/* Men — /men and /men/:category */}
-        <Route
-          path='/men'
-          element={<ProductListingPage pageType="men" />}
-        />
-        <Route
-          path='/men/:category'
-          element={<ProductListingPage pageType="men" />}
-        />
+          {/* Sports — /products/:sport (e.g. /products/football) */}
+          <Route path='/products/:sport' element={<ProductListingPage pageType="sport" />} />
 
-        {/* Women — /women and /women/:category */}
-        <Route
-          path='/women'
-          element={<ProductListingPage pageType="women" />}
-        />
-        <Route
-          path='/women/:category'
-          element={<ProductListingPage pageType="women" />}
-        />
+          {/* Men — /men and /men/:category */}
+          <Route path='/men' element={<ProductListingPage pageType="men" />} />
+          <Route path='/men/:category' element={<ProductListingPage pageType="men" />} />
 
-        {/* Accessories — /accessories/:category (e.g. /accessories/Water Bottles) */}
-        <Route
-          path='/accessories/:category'
-          element={<ProductListingPage pageType="accessories" />}
-        />
+          {/* Women — /women and /women/:category */}
+          <Route path='/women' element={<ProductListingPage pageType="women" />} />
+          <Route path='/women/:category' element={<ProductListingPage pageType="women" />} />
 
-        {/* Featured Collection — /featured/:subcategory (e.g. /featured/Shoes) */}
-        <Route
-          path='/featured/:subcategory'
-          element={<ProductListingPage pageType="featured" />}
-        />
+          {/* Accessories — /accessories/:category */}
+          <Route path='/accessories/:category' element={<ProductListingPage pageType="accessories" />} />
 
-        <Route 
-          path='/product/:id'
-          element ={<ProductDetailPage/>}
-        />
+          {/* Featured Collection — /featured/:subcategory */}
+          <Route path='/featured/:subcategory' element={<ProductListingPage pageType="featured" />} />
 
-        <Route 
-           path='/login'
-           element={<Login/>}
-        />
+          <Route path='/product/:id' element ={<ProductDetailPage/>} />
 
-        <Route 
-           path='/signup'
-           element={<Signup/>}
-        />
+          <Route path='/login' element={<Login/>} />
+          <Route path='/signup' element={<Signup/>} />
+          <Route path='/forgot-password' element={<ForgotPassword/>} />
+          <Route path='/reset-password/:token' element={<ResetPassword/>} />
+          <Route path='/verify-email/:token' element={<VerifyEmail/>} />
 
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route 
-             path='/profile'
-             element={<Profile/>}
-          />
-          <Route 
-             path='/cart'
-             element={<CartPage/>}
-          />
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path='/profile' element={<Profile/>} />
+            <Route path='/orders' element={<Profile initialTab="orders"/>} />
+            <Route path='/cart' element={<CartPage/>} />
+            <Route path='/checkout' element={<CheckoutPage/>} />
+          </Route>
+
+          {/* Catch-all / 404 Route */}
+          <Route path='*' element={<NotFound />} />
         </Route>
-
       </Routes>
     </div>
   )

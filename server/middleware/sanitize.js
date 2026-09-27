@@ -13,5 +13,17 @@ const stripDangerousKeys = (obj) => {
 export const sanitizeInput = (req, res, next) => {
   stripDangerousKeys(req.body)
   stripDangerousKeys(req.params)
+  
+  if (req.query) {
+    const sanitizedQuery = { ...req.query }
+    stripDangerousKeys(sanitizedQuery)
+    Object.defineProperty(req, 'query', {
+      value: sanitizedQuery,
+      configurable: true,
+      enumerable: true,
+      writable: true
+    })
+  }
+  
   next()
 }

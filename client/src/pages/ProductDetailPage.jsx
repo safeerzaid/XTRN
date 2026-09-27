@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
-import NavBar from "../components/layout/NavBar";
-import Footer from "../components/layout/Footer";
 import ProductListCard from "../components/ui/ProductListCard";
 import api from "../api/axios";
 import useCartStore from "../store/cartStore";
@@ -105,7 +103,6 @@ function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      <NavBar alwaysVisible={true}  />
 
       <main className="mx-auto w-full max-w-[1280px] px-3 sm:px-4 md:px-6 lg:px-8 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-20">
         <div className="flex flex-col lg:flex-row lg:items-start lg:gap-10 xl:gap-14">
@@ -336,7 +333,6 @@ function ProductDetailPage() {
 
       </section>
 
-      <Footer />
     </div>
   );
 }

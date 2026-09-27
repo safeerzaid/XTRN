@@ -264,6 +264,8 @@ const Navbar = ({ alwaysVisible = false }) => {
 
   useEffect(() => {
     setAccountMenuOpen(false);
+    setLoginOpen(false);
+    setSignupOpen(false);
   }, [location.pathname]);
 
   /* ─────────────────────────────────────────────
@@ -608,6 +610,19 @@ const Navbar = ({ alwaysVisible = false }) => {
   };
 
   /* ─────────────────────────────────────────────
+     SEARCH SUBMIT
+  ───────────────────────────────────────────── */
+  const handleSearchSubmit = () => {
+    if (searchValue.trim().length > 0) {
+      navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+      // Close all search bars
+      if (mobileSearchOpen) closeMobileSearch();
+      if (tabletSearchOpen) closeTabletSearch();
+      if (desktopSearchOpen) closeDesktopSearch();
+    }
+  };
+
+  /* ─────────────────────────────────────────────
      RENDER
   ───────────────────────────────────────────── */
 
@@ -859,6 +874,7 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="text"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSearchSubmit(); }}
               placeholder="Search"
               className="h-10 w-full bg-transparent px-0 text-[14px] text-black outline-none"
               style={{
@@ -965,6 +981,7 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="text"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSearchSubmit(); }}
               placeholder="Search"
               className="h-10 w-full bg-transparent px-0 text-[14px] text-white outline-none"
               style={{
@@ -1071,6 +1088,7 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="text"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSearchSubmit(); }}
               placeholder="Search"
               className="h-9 w-full bg-transparent px-0 pb-1 text-[14px] text-black outline-none"
               style={{
@@ -1239,6 +1257,7 @@ const Navbar = ({ alwaysVisible = false }) => {
               type="text"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSearchSubmit(); }}
               placeholder="Search"
               className="h-9 w-full bg-transparent px-0 pb-1 text-[14px] text-black outline-none"
               style={{

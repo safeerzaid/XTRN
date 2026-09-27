@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import NavBar from '../components/layout/NavBar';
-import Footer from '../components/layout/Footer';
 import useCartStore from '../store/cartStore';
 import { FiTrash2, FiMinus, FiPlus, FiArrowRight } from 'react-icons/fi';
 import { useAuth } from '../context/authContext';
+
+import api from '../api/axios';
 
 function CartPage() {
   const { items, loading, fetchCart, updateQuantity, removeItem, getTotalPrice } = useCartStore();
@@ -25,11 +25,14 @@ function CartPage() {
     updateQuantity(itemId, newQuantity);
   };
 
+  const handleCheckout = () => {
+    navigate('/checkout');
+  };
+
   const total = getTotalPrice();
 
   return (
     <div className="bg-white min-h-screen flex flex-col font-nav">
-      <NavBar alwaysVisible={true} />
       
       <main className="flex-grow pt-32 pb-20 px-6 sm:px-10 max-w-7xl mx-auto w-full">
         <h1 className="text-3xl md:text-4xl font-bold uppercase tracking-widest text-black mb-12">
@@ -159,7 +162,11 @@ function CartPage() {
                   <span className="text-xl font-bold">${total.toFixed(2)}</span>
                 </div>
 
-                <button className="w-full bg-black text-white py-4 text-sm font-semibold uppercase tracking-[0.1em] hover:bg-gray-900 transition-colors flex items-center justify-center gap-2">
+                <button 
+                  onClick={handleCheckout}
+                  disabled={items.length === 0}
+                  className="w-full bg-black text-white py-4 text-sm font-semibold uppercase tracking-[0.1em] hover:bg-gray-900 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
                   Checkout
                 </button>
               </div>
@@ -168,7 +175,6 @@ function CartPage() {
         )}
       </main>
 
-      <Footer />
     </div>
   );
 }

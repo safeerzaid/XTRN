@@ -12,7 +12,7 @@ import { useAuth } from "../../context/authContext";
 function ProductListCard({ product, pageType = "sport" }) {
   const addItem = useCartStore((state) => state.addItem);
   const { isLoggedIn } = useAuth();
-  const { isWishlisted, toggleWishlist } = useWishlist();
+  const { isWishlisted, toggleWishlist, isPending } = useWishlist();
   const navigate = useNavigate();
   const wishlisted = isWishlisted(product._id);
 
@@ -128,6 +128,7 @@ function ProductListCard({ product, pageType = "sport" }) {
           <button
             type="button"
             aria-label="Add to wishlist"
+            disabled={isPending(product._id)}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

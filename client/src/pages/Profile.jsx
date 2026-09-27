@@ -4,15 +4,13 @@ import api from '../api/axios';
 import { useAuth } from '../context/authContext';
 import { useWishlist } from '../context/WishlistContext';
 import { FiUser, FiBox, FiHeart, FiLogOut, FiMapPin, FiTrash2 } from 'react-icons/fi';
-import NavBar from '../components/layout/NavBar';
-import Footer from '../components/layout/Footer';
 
-const Profile = () => {
+const Profile = ({ initialTab = 'overview' }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'orders', 'wishlist', 'addresses'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'overview', 'orders', 'wishlist', 'addresses'
   
   // Editing states
   const [isEditingName, setIsEditingName] = useState(false);
@@ -21,17 +19,50 @@ const Profile = () => {
   const [nameSuccess, setNameSuccess] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
 
+  // Password editing states
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+
 
   const { logout, setUser } = useAuth();
   const { wishlist, removeFromWishlist, count, loading: wishlistLoading } = useWishlist();
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const response = await api.get('/orders');
+      setOrders(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Failed to fetch orders', error);
+      setOrders([]);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      fetchOrders();
+    }
+  }, [activeTab]);
+
   useEffect(() => {
     if (location.state?.tab) {
       setActiveTab(location.state.tab);
+    } else {
+      setActiveTab(initialTab);
     }
-  }, [location.state?.tab]);
+  }, [location.state?.tab, initialTab]);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +117,39 @@ const Profile = () => {
     }
   };
 
+  const handleSavePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+    
+    if (!currentPassword) {
+      setPasswordError('Current password is required.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters long.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      const res = await api.post('/auth/change-password', { currentPassword, newPassword });
+      setPasswordSuccess(res.data.message || 'Password updated successfully!');
+      setIsEditingPassword(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setPasswordSuccess(''), 3000);
+    } catch (err) {
+      setPasswordError(err.response?.data?.message || 'Failed to update password');
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -105,13 +169,10 @@ const Profile = () => {
 
   if (!profile) return null;
 
-  // Placeholder arrays for future backend features
-  const orders = []; // TODO: Connect to GET /api/orders
   const addresses = []; // Placeholder for Phase C
 
   return (
     <>
-    <NavBar alwaysVisible={true} />
     <div 
       className="min-h-screen bg-[#f4f4f4] flex flex-col md:flex-row pt-[64px] md:pt-[80px]"
       style={{ fontFamily: 'var(--font-nav)' }}
@@ -301,6 +362,84 @@ const Profile = () => {
                 )}
               </div>
 
+              {/* Change Password Card */}
+              <div className="border border-gray-200 p-8 mb-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-xl font-bold text-black">Password</h3>
+                  <div className="flex gap-4">
+                    {!isEditingPassword && (
+                      <button 
+                        onClick={() => setIsEditingPassword(true)} 
+                        className="text-sm font-bold uppercase tracking-widest underline hover:text-gray-600 transition-colors"
+                      >
+                        Change Password
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {passwordSuccess && <p className="text-green-600 text-sm font-bold mb-4">{passwordSuccess}</p>}
+
+                {isEditingPassword ? (
+                  <div className="mb-6 bg-gray-50 p-6 border border-gray-200 flex flex-col gap-4">
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Current Password</label>
+                      <input 
+                        type="password" 
+                        value={currentPassword} 
+                        onChange={(e) => setCurrentPassword(e.target.value)} 
+                        className="w-full p-3 border border-gray-300 focus:border-black focus:outline-none" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">New Password</label>
+                      <input 
+                        type="password" 
+                        value={newPassword} 
+                        onChange={(e) => setNewPassword(e.target.value)} 
+                        className="w-full p-3 border border-gray-300 focus:border-black focus:outline-none" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Confirm New Password</label>
+                      <input 
+                        type="password" 
+                        value={confirmPassword} 
+                        onChange={(e) => setConfirmPassword(e.target.value)} 
+                        className="w-full p-3 border border-gray-300 focus:border-black focus:outline-none" 
+                      />
+                    </div>
+                    {passwordError && <p className="text-red-500 text-xs font-bold">{passwordError}</p>}
+                    
+                    <div className="flex gap-4 mt-2">
+                      <button 
+                        onClick={handleSavePassword} 
+                        disabled={isSavingPassword} 
+                        className="px-6 py-3 bg-black text-white text-xs font-bold tracking-widest uppercase disabled:opacity-50 transition-colors hover:bg-gray-800"
+                      >
+                        {isSavingPassword ? 'Saving...' : 'Save Password'}
+                      </button>
+                      <button 
+                        onClick={() => { 
+                          setIsEditingPassword(false); 
+                          setPasswordError(''); 
+                          setCurrentPassword('');
+                          setNewPassword('');
+                          setConfirmPassword('');
+                        }} 
+                        className="px-6 py-3 border border-gray-300 text-black text-xs font-bold tracking-widest uppercase hover:bg-gray-100 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-700 flex flex-col gap-2 mb-4">
+                    <p>********</p>
+                  </div>
+                )}
+              </div>
+
               <button 
                 onClick={() => navigate('/men')}
                 className="px-10 py-4 border border-black text-black text-xs font-bold tracking-[0.1em] uppercase hover:bg-black hover:text-white transition-colors"
@@ -316,7 +455,9 @@ const Profile = () => {
             <div className="animate-fade-in max-w-5xl">
               <h2 className="text-3xl md:text-4xl font-bold text-black mb-10 tracking-tight">My Orders</h2>
               
-              {orders.length > 0 ? (
+                {ordersLoading ? (
+                  <p className="text-gray-500 font-medium tracking-wide">Loading orders...</p>
+                ) : Array.isArray(orders) && orders.length > 0 ? (
                 <>
                   {/* Filter Pills */}
                   <div className="flex flex-wrap items-center gap-3 mb-10 border-b border-gray-200 pb-6">
@@ -340,11 +481,11 @@ const Profile = () => {
                       <div key={idx} className="bg-white rounded-none overflow-hidden border border-gray-200">
                         {/* Order Summary Bar */}
                         <div className="grid grid-cols-4 gap-4 p-5 items-center border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
-                          <div className="col-span-1 text-sm font-bold text-black">{order.id}</div>
-                          <div className="col-span-1 text-center text-sm font-bold text-black">{order.cost}</div>
+                          <div className="col-span-1 text-sm font-bold text-black overflow-hidden text-ellipsis whitespace-nowrap" title={order._id}>#{order._id ? order._id.substring(order._id.length - 8) : 'N/A'}</div>
+                          <div className="col-span-1 text-center text-sm font-bold text-black">${typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : order.totalAmount}</div>
                           <div className="col-span-2 flex items-center justify-end gap-2 pr-2">
                             <span className="flex items-center gap-2 text-xs font-bold text-black uppercase tracking-wider">
-                              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                              <span className={`w-2 h-2 rounded-full ${order.status === 'delivered' ? 'bg-green-500' : 'bg-orange-500'}`}></span>
                               {order.status}
                             </span>
                           </div>
@@ -352,22 +493,33 @@ const Profile = () => {
 
                         {/* Order Details / Items */}
                         <div className="p-8 flex flex-col gap-6 bg-[#fcfcfc]">
-                          {order.items?.map((item, i) => (
+                          {order.items?.map((item, i) => {
+                            let imageSrc = item.product?.images?.default?.[0] || item.product?.image;
+                            if (item.product?.images?.men?.[0]) imageSrc = item.product.images.men[0];
+                            else if (item.product?.images?.women?.[0]) imageSrc = item.product.images.women[0];
+
+                            return (
                             <div key={i} className="flex items-center gap-6">
-                              <div className="w-20 h-24 bg-gray-200 overflow-hidden shrink-0">
-                                <img src={item.img} alt={item.name} className="w-full h-full object-cover grayscale opacity-90" />
+                              <div className="w-20 h-24 bg-gray-200 overflow-hidden shrink-0 flex items-center justify-center text-xs text-gray-400 font-bold uppercase">
+                                {imageSrc ? (
+                                  <img src={imageSrc} alt={item.name} className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 transition-all" />
+                                ) : (
+                                  'No Img'
+                                )}
                               </div>
                               <div className="flex-1">
                                 <p className="text-sm font-bold text-black">{item.name}</p>
+                                {item.size && <p className="text-xs text-gray-500 uppercase mt-1">Size: {item.size}</p>}
                               </div>
                               <div className="text-sm text-gray-500 font-medium">
                                 Quantity: <span className="text-black font-bold">{item.quantity}</span>
                               </div>
                               <div className="text-sm text-gray-500 font-medium text-right min-w-[80px]">
-                                Price: <span className="text-black font-bold">{item.price}</span>
+                                Price: <span className="text-black font-bold">${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</span>
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -452,7 +604,6 @@ const Profile = () => {
         </div>
       </div>
     </div>
-    <Footer />
     </>
   );
 };

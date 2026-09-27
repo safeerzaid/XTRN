@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import 'dotenv/config';
 import helmet from "helmet"
 import cookieParser from "cookie-parser";
 import { sanitizeInput } from './middleware/sanitize.js'
@@ -13,6 +12,7 @@ import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import cartRoutes from "./routes/CartRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 
@@ -36,6 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/orders", orderRoutes);
 
 
 const PORT = process.env.PORT || 5000;

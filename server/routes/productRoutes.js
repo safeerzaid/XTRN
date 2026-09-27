@@ -60,9 +60,57 @@ router.get('/', async (req, res) => {
     const products = await Product.find(filter)
     res.json(products)
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch products', error: error.message })
+    res.status(500).json({ message: 'Failed to fetch products' })
   }
 })
+
+
+// GET /api/products/search
+router.get('/search', async (req, res) => {
+  try {
+    const { q, page = 1, limit = 20 } = req.query;
+    if (!q || q.trim() === '') {
+      return res.status(200).json({
+        products: [],
+        page: 1,
+        totalPages: 0,
+        totalProducts: 0
+      });
+    }
+
+    // Escape regex characters from user input
+    const sanitizedQuery = q.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(sanitizedQuery, 'i');
+
+    const filter = {
+      $or: [
+        { name: regex },
+        { description: regex },
+        { brand: regex },
+        { category: regex },
+        { sport: regex }
+      ]
+    };
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    const [products, totalProducts] = await Promise.all([
+      Product.find(filter).skip(skip).limit(limitNum).exec(),
+      Product.countDocuments(filter).exec()
+    ]);
+
+    res.status(200).json({
+      products,
+      page: pageNum,
+      totalPages: Math.ceil(totalProducts / limitNum),
+      totalProducts
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Search failed' });
+  }
+});
 
 
 // GET /api/products/:id — single product detail
@@ -74,7 +122,7 @@ router.get('/:id', async (req, res) => {
     }
     res.json(product)
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch product', error: error.message })
+    res.status(500).json({ message: 'Failed to fetch product' })
   }
 })
 
@@ -92,8 +140,7 @@ router.post('/', authMiddleware, async (req, res) => {
     res.status(201).json(savedProduct)
   } catch (error) {
     res.status(400).json({
-      message: 'Failed to create product',
-      error: error.message
+      message: 'Failed to create product'
     })
   }
 })

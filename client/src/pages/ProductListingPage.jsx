@@ -3,8 +3,6 @@ import { useParams, useLocation } from "react-router-dom";
 import { FiSliders, FiChevronDown, FiX } from "react-icons/fi";
 import api  from "../api/axios";
 
-import NavBar from "../components/layout/NavBar";
-import Footer from "../components/layout/Footer";
 import ProductListingHeader from "../components/ui/ProductListingHeader";
 import ProductCategoryNav from "../components/ui/ProductCategoryNav";
 import ProductListCard from "../components/ui/ProductListCard";
@@ -192,7 +190,6 @@ function ProductListingPage({ pageType = "sport" }) {
   return (
     <div className="pt-16 lg:pt-20">
       {/* ── NavBar — always white on listing page ────────────────────────── */}
-      <NavBar alwaysVisible={true} />
 
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <ProductListingHeader products={sortedProducts} heading={heading} />
@@ -416,7 +413,6 @@ function ProductListingPage({ pageType = "sport" }) {
       )}
 
       {/* Footer */}
-      <Footer />
     </div>
   );
 }
