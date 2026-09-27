@@ -2,7 +2,8 @@ import express from 'express'
 import Product from '../models/Product.js'
 import User from '../models/User.js'
 import authMiddleware from '../middleware/authMiddleware.js'
-
+import adminMiddleware from '../middleware/adminMiddleware.js'
+import { updateProduct, deleteProduct } from '../controllers/productController.js'
 const router = express.Router()
 
 
@@ -128,11 +129,12 @@ router.get('/:id', async (req, res) => {
 
 
 // POST /api/products — create a new product
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden: Admin access required' })
+    const { productSchema } = await import('../validators/productValidator.js');
+    const result = productSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: 'Invalid product data', errors: result.error.errors });
     }
 
     const product = new Product(req.body)
@@ -140,10 +142,17 @@ router.post('/', authMiddleware, async (req, res) => {
     res.status(201).json(savedProduct)
   } catch (error) {
     res.status(400).json({
-      message: 'Failed to create product'
+      message: 'Failed to create product',
+      error: error.message
     })
   }
 })
+
+// PUT /api/products/:id — update a product (admin only)
+router.put('/:id', authMiddleware, adminMiddleware, updateProduct)
+
+// DELETE /api/products/:id — delete a product (admin only)
+router.delete('/:id', authMiddleware, adminMiddleware, deleteProduct)
 
 
 export default router

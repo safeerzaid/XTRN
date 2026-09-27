@@ -155,6 +155,25 @@ export const login = async (req, res) => {
     maxAge:  7 * 24 * 60 * 60 * 1000
   })
 
+  // Send login notification email asynchronously (fire-and-forget)
+  try {
+    const timestamp = new Date().toLocaleString('en-US', { timeZone: 'UTC', timeZoneName: 'short' });
+    sendEmail({
+      to: user.email,
+      subject: 'New login to your XTRN account',
+      html: `
+        <p>Hi ${user.name || 'User'},</p>
+        <p>We noticed a new login to your XTRN Store account.</p>
+        <p><strong>Time of login:</strong> ${timestamp}</p>
+        <p>If this was you, you can safely ignore this email.</p>
+      `
+    }).catch(emailError => {
+      console.error('Failed to send login notification email:', emailError);
+    });
+  } catch (error) {
+    console.error('Error preparing login notification email:', error);
+  }
+
    return res.status(200).json({
     message: "login successfull",
     accessToken,

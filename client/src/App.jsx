@@ -2,7 +2,7 @@ import React from 'react'
 import Home from './pages/Home'
 import ProductListingPage from './pages/ProductListingPage'
 import CommunityPage from './pages/CommunityPage'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, Navigate } from 'react-router-dom'
 import ProductDetailPage from './pages/ProductDetailPage'
 import Login from "./components/Login";
 import Signup from "./components/Signup";
@@ -22,6 +22,10 @@ import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import Layout from './components/layout/Layout';
 import NotFound from './pages/NotFound';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProducts from './pages/admin/AdminProducts';
+import AdminOrders from './pages/admin/AdminOrders';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -62,6 +66,14 @@ function App() {
   return (
     <div>
       <Routes>
+        {/* Admin Routes */}
+        <Route element={<AdminProtectedRoute />}>
+          <Route path='/admin' element={<AdminDashboard />}>
+            <Route index element={<Navigate to="products" replace />} />
+            <Route path='products' element={<AdminProducts />} />
+            <Route path='orders' element={<AdminOrders />} />
+          </Route>
+        </Route>
 
         <Route element={<Layout />}>
           {/* Home */}
