@@ -13,6 +13,8 @@ import profileRoutes from "./routes/profileRoutes.js";
 import cartRoutes from "./routes/CartRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import { startCancelStaleOrdersJob } from "./jobs/cancelStaleOrders.js";
 
 const app = express();
 
@@ -21,11 +23,16 @@ app.use(cors({
    credentials: true
 }));
 app.use(helmet())
+
+// Webhook: express.json()-inu MUNPE aayirikkanam (raw body venam)
+app.use("/api/payments", paymentRoutes);
+
 app.use(express.json());
 app.use(cookieParser())
 app.use(sanitizeInput)
 
 connectDB();
+startCancelStaleOrdersJob();
 
 app.get("/", (req, res) => {
   res.send("Server is running");

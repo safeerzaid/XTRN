@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
     if (department) {
       filter.department = department
       if (department === 'men' || department === 'women') {
-        filter.gender = department // Strictly only men or women
+        filter.gender = { $in: [department, 'unisex'] } // Allow unisex products to show in men/women departments
       }
     }
     if (category)    filter.category    = category

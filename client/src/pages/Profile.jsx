@@ -36,6 +36,19 @@ const Profile = ({ initialTab = 'overview' }) => {
 
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [orderFilter, setOrderFilter] = useState('all');
+
+  const inProcessStatuses = ['pending', 'processing', 'shipped'];
+  const inProcessCount = orders.filter(o => inProcessStatuses.includes(o.status)).length;
+  const completedCount = orders.filter(o => o.status === 'delivered').length;
+  const canceledCount = orders.filter(o => o.status === 'cancelled').length;
+
+  const displayedOrders = orders.filter(o => {
+    if (orderFilter === 'in_process') return inProcessStatuses.includes(o.status);
+    if (orderFilter === 'completed') return o.status === 'delivered';
+    if (orderFilter === 'canceled') return o.status === 'cancelled';
+    return true;
+  });
 
   const fetchOrders = async () => {
     try {
@@ -51,10 +64,8 @@ const Profile = ({ initialTab = 'overview' }) => {
   };
 
   useEffect(() => {
-    if (activeTab === 'orders') {
-      fetchOrders();
-    }
-  }, [activeTab]);
+    fetchOrders();
+  }, []);
 
   useEffect(() => {
     if (location.state?.tab) {
@@ -461,11 +472,27 @@ const Profile = ({ initialTab = 'overview' }) => {
                 <>
                   {/* Filter Pills */}
                   <div className="flex flex-wrap items-center gap-3 mb-10 border-b border-gray-200 pb-6">
-                    <button className="px-5 py-2 rounded-full bg-[#3b4045] text-white text-xs font-bold tracking-[0.08em] uppercase transition-colors hover:bg-black">all ({orders.length})</button>
-                    <button className="px-5 py-2 rounded-full bg-transparent border border-gray-300 text-gray-600 text-xs font-bold tracking-[0.08em] uppercase transition-colors hover:border-black hover:text-black">in process (0)</button>
-                    <button className="px-5 py-2 rounded-full bg-transparent border border-gray-300 text-gray-600 text-xs font-bold tracking-[0.08em] uppercase transition-colors hover:border-black hover:text-black">completed ({orders.length})</button>
+                    <button 
+                      onClick={() => setOrderFilter('all')}
+                      className={`px-5 py-2 rounded-full text-xs font-bold tracking-[0.08em] uppercase transition-colors ${orderFilter === 'all' ? 'bg-[#3b4045] text-white hover:bg-black' : 'bg-transparent border border-gray-300 text-gray-600 hover:border-black hover:text-black'}`}>
+                      all ({orders.length})
+                    </button>
+                    <button 
+                      onClick={() => setOrderFilter('in_process')}
+                      className={`px-5 py-2 rounded-full text-xs font-bold tracking-[0.08em] uppercase transition-colors ${orderFilter === 'in_process' ? 'bg-[#3b4045] text-white hover:bg-black' : 'bg-transparent border border-gray-300 text-gray-600 hover:border-black hover:text-black'}`}>
+                      in process ({inProcessCount})
+                    </button>
+                    <button 
+                      onClick={() => setOrderFilter('completed')}
+                      className={`px-5 py-2 rounded-full text-xs font-bold tracking-[0.08em] uppercase transition-colors ${orderFilter === 'completed' ? 'bg-[#3b4045] text-white hover:bg-black' : 'bg-transparent border border-gray-300 text-gray-600 hover:border-black hover:text-black'}`}>
+                      completed ({completedCount})
+                    </button>
                     <div className="flex-1"></div>
-                    <button className="px-5 py-2 rounded-full bg-transparent border border-gray-300 text-gray-600 text-xs font-bold tracking-[0.08em] uppercase transition-colors hover:border-black hover:text-black">canceled</button>
+                    <button 
+                      onClick={() => setOrderFilter('canceled')}
+                      className={`px-5 py-2 rounded-full text-xs font-bold tracking-[0.08em] uppercase transition-colors ${orderFilter === 'canceled' ? 'bg-[#3b4045] text-white hover:bg-black' : 'bg-transparent border border-gray-300 text-gray-600 hover:border-black hover:text-black'}`}>
+                      canceled ({canceledCount})
+                    </button>
                   </div>
 
                   {/* Orders List */}
@@ -477,7 +504,7 @@ const Profile = ({ initialTab = 'overview' }) => {
                       <div className="col-span-2 text-right pr-6">Order Status</div>
                     </div>
 
-                    {orders.map((order, idx) => (
+                    {displayedOrders.length > 0 ? displayedOrders.map((order, idx) => (
                       <div key={idx} className="bg-white rounded-none overflow-hidden border border-gray-200">
                         {/* Order Summary Bar */}
                         <div className="grid grid-cols-4 gap-4 p-5 items-center border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
@@ -502,7 +529,7 @@ const Profile = ({ initialTab = 'overview' }) => {
                             <div key={i} className="flex items-center gap-6">
                               <div className="w-20 h-24 bg-gray-200 overflow-hidden shrink-0 flex items-center justify-center text-xs text-gray-400 font-bold uppercase">
                                 {imageSrc ? (
-                                  <img src={imageSrc} alt={item.name} className="w-full h-full object-cover grayscale opacity-90 hover:grayscale-0 transition-all" />
+                                  <img src={imageSrc} alt={item.name} className="w-full h-full object-cover" />
                                 ) : (
                                   'No Img'
                                 )}
@@ -522,7 +549,9 @@ const Profile = ({ initialTab = 'overview' }) => {
                           })}
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="py-10 text-center text-gray-500 font-medium">No orders found for this category.</div>
+                    )}
                   </div>
                 </>
               ) : (
