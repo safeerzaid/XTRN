@@ -74,15 +74,6 @@ function ProductListCard({ product, pageType = "sport" }) {
   // FORMAT PRICE
   // --------------------------------
 
-  const formatPrice = (price) => {
-
-    if (price == null) {
-      return "—";
-    }
-
-    return `₹${price.toLocaleString("en-IN")}`;
-  };
-
 
   // --------------------------------
   // ADD TO CART (quick-add, first available size)

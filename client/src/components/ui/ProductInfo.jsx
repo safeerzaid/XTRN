@@ -33,8 +33,7 @@ function ProductInfo({ product = {} }) {
   const navigate = useNavigate();
   const wishlisted = isWishlisted(product._id);
 
-  const formatPrice = (p) =>
-    p != null ? `₹${Number(p).toLocaleString("en-IN")}` : null;
+
 
   const handleAddToCart = () => {
     setCart(true);

@@ -4,6 +4,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/authContext';
 import { useWishlist } from '../context/WishlistContext';
 import { FiUser, FiBox, FiHeart, FiLogOut, FiMapPin, FiTrash2 } from 'react-icons/fi';
+import { formatPrice } from '../utils/formatPrice';
 
 const Profile = ({ initialTab = 'overview' }) => {
   const [profile, setProfile] = useState(null);
@@ -509,7 +510,7 @@ const Profile = ({ initialTab = 'overview' }) => {
                         {/* Order Summary Bar */}
                         <div className="grid grid-cols-4 gap-4 p-5 items-center border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
                           <div className="col-span-1 text-sm font-bold text-black overflow-hidden text-ellipsis whitespace-nowrap" title={order._id}>#{order._id ? order._id.substring(order._id.length - 8) : 'N/A'}</div>
-                          <div className="col-span-1 text-center text-sm font-bold text-black">${typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : order.totalAmount}</div>
+                          <div className="col-span-1 text-center text-sm font-bold text-black">{formatPrice(order.totalAmount)}</div>
                           <div className="col-span-2 flex items-center justify-end gap-2 pr-2">
                             <span className="flex items-center gap-2 text-xs font-bold text-black uppercase tracking-wider">
                               <span className={`w-2 h-2 rounded-full ${order.status === 'delivered' ? 'bg-green-500' : 'bg-orange-500'}`}></span>
@@ -542,7 +543,7 @@ const Profile = ({ initialTab = 'overview' }) => {
                                 Quantity: <span className="text-black font-bold">{item.quantity}</span>
                               </div>
                               <div className="text-sm text-gray-500 font-medium text-right min-w-[80px]">
-                                Price: <span className="text-black font-bold">${typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</span>
+                                Price: <span className="text-black font-bold">{formatPrice(item.price)}</span>
                               </div>
                             </div>
                             );
@@ -584,7 +585,7 @@ const Profile = ({ initialTab = 'overview' }) => {
               ) : wishlist.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {wishlist.map(product => {
-                    const price = product.price ? `₹${Number(product.price).toLocaleString("en-IN")}` : '';
+                    const price = product.price ? formatPrice(product.price) : '';
                     let imageSrc = product.images?.default?.[0] || product.image;
                     if (product.images?.men?.[0]) imageSrc = product.images.men[0];
                     else if (product.images?.women?.[0]) imageSrc = product.images.women[0];

@@ -56,6 +56,10 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
 
     const payload = {
       ...formData,
+      price: formData.price === '' ? undefined : Number(formData.price),
+      originalPrice: formData.originalPrice === '' ? undefined : Number(formData.originalPrice),
+      discount: formData.discount === '' ? undefined : Number(formData.discount),
+      stock: formData.stock === '' ? undefined : Number(formData.stock),
       sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
       images: {
         default: formData.images ? formData.images.split(',').map(s => s.trim()).filter(Boolean) : []

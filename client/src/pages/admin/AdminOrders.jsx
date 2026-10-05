@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
+import { formatPrice } from '../../utils/formatPrice';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -66,7 +67,7 @@ const AdminOrders = () => {
                     <div className="font-medium text-gray-800">{order.user?.name || 'Unknown'}</div>
                     <div className="text-xs text-gray-500">{order.user?.email || 'N/A'}</div>
                   </td>
-                  <td className="p-3 text-sm text-gray-600">${order.totalAmount}</td>
+                  <td className="p-3 text-sm text-gray-600">{formatPrice(order.totalAmount)}</td>
                   <td className="p-3 text-sm text-gray-600">{order.items?.length || 0} items</td>
                   <td className="p-3">
                     <select

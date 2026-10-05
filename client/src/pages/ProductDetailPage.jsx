@@ -5,6 +5,7 @@ import { FiHeart } from "react-icons/fi";
 import ProductListCard from "../components/ui/ProductListCard";
 import api from "../api/axios";
 import useCartStore from "../store/cartStore";
+import { formatPrice } from '../utils/formatPrice';
 
 function ProductDetailPage() {
   const [product, setProduct] = useState(null);
@@ -160,11 +161,11 @@ function ProductDetailPage() {
               </h1>
               <div className="flex items-center gap-2">
                 <span className="text-xl sm:text-2xl font-semibold text-black font-nav">
-                  ₹{product.price?.toLocaleString("en-IN")}
+                  {formatPrice(product.price)}
                 </span>
                 {product.originalPrice && (
                   <span className="text-base text-gray-400 line-through font-nav">
-                    ₹{product.originalPrice.toLocaleString("en-IN")}
+                    {formatPrice(product.originalPrice)}
                   </span>
                 )}
               </div>

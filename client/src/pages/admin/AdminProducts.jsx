@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import ProductFormModal from '../../components/admin/ProductFormModal';
+import { formatPrice } from '../../utils/formatPrice';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -87,7 +88,7 @@ const AdminProducts = () => {
                   </td>
                   <td className="p-3 font-medium text-gray-800">{product.name}</td>
                   <td className="p-3 text-gray-600">{product.category || '-'}</td>
-                  <td className="p-3 text-gray-600">${product.price}</td>
+                  <td className="p-3 text-gray-600">{formatPrice(product.price)}</td>
                   <td className="p-3 text-gray-600">{product.stock}</td>
                   <td className="p-3">
                     <div className="flex gap-3">

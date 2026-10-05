@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useCartStore from '../store/cartStore';
 import api from '../api/axios';
 import { useAuth } from '../context/authContext';
+import { formatPrice } from '../utils/formatPrice';
 
 const inputClass =
   'border border-gray-300 p-3 w-full rounded-none outline-none focus:border-black';
@@ -300,11 +301,11 @@ function CheckoutPage() {
                   <div className="flex-1">
                     <p className="font-bold uppercase">{item.product?.name}</p>
                     <p className="text-gray-500">
-                      Size: {item.size} &nbsp;·&nbsp; ₹{item.product?.price} × {item.quantity}
+                      Size: {item.size} &nbsp;·&nbsp; {formatPrice(item.product?.price)} × {item.quantity}
                     </p>
                   </div>
                   <p className="font-semibold whitespace-nowrap">
-                    ₹{(item.product?.price * item.quantity).toFixed(2)}
+                    {formatPrice(item.product?.price * item.quantity)}
                   </p>
                 </div>
               ))}
@@ -313,7 +314,7 @@ function CheckoutPage() {
             <div className="border-t border-dashed border-gray-300 pt-4 flex flex-col gap-2 text-sm text-gray-600">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span className="font-semibold text-black">₹{total.toFixed(2)}</span>
+                <span className="font-semibold text-black">{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
@@ -323,7 +324,7 @@ function CheckoutPage() {
 
             <div className="flex justify-between items-center border-t border-gray-200 mt-4 pt-4">
               <span className="font-bold uppercase tracking-wide">Total</span>
-              <span className="text-xl font-bold">₹{total.toFixed(2)}</span>
+              <span className="text-xl font-bold">{formatPrice(total)}</span>
             </div>
           </div>
         </div>

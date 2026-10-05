@@ -31,6 +31,8 @@ function ProductListingPage({ pageType = "sport" }) {
   // Defaults to 'category' so all existing clothing nav items keep working unchanged
   const filterBy = new URLSearchParams(location.search).get("filterBy") || "category";
 
+  const isGenderFixed = pageType === "men" || pageType === "women";
+
   const [products, setProducts]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState("");
@@ -163,7 +165,18 @@ function ProductListingPage({ pageType = "sport" }) {
     featuredFilters.genders.size + featuredFilters.types.size +
     featuredFilters.brands.size + featuredFilters.sizes.size +
     (featuredFilters.sortBy !== 'default' ? 1 : 0);
-  const heading = pageType === "sport" ? sport : pageType === "featured" ? subcategory : category || pageType;
+  let heading = pageType;
+  if (pageType === "sport") {
+    heading = sport;
+  } else if (pageType === "featured") {
+    heading = subcategory;
+  } else if (category) {
+    if (pageType === "men") heading = `Men's ${category}`;
+    else if (pageType === "women") heading = `Women's ${category}`;
+    else heading = category;
+  } else {
+    heading = pageType;
+  }
 
   const priceLabelMap = {
     default:      "Price",
@@ -233,7 +246,7 @@ function ProductListingPage({ pageType = "sport" }) {
         ) : (
           /* Standard pages: category + price + size drawer */
           <div className="space-y-6">
-            {pageType !== 'accessories' && genderOptions.length > 0 && (
+            {pageType !== 'accessories' && !isGenderFixed && genderOptions.length > 0 && (
               <FilterSection title="Gender" activeCount={selectedGenders.size}>
                 <div className="space-y-2">
                   {genderOptions.map((gen) => (
@@ -320,7 +333,7 @@ function ProductListingPage({ pageType = "sport" }) {
           ) : (
             /* Standard pages: Category + Price + Size only */
             <>
-              {pageType !== 'accessories' && genderOptions.length > 0 && (
+              {pageType !== 'accessories' && !isGenderFixed && genderOptions.length > 0 && (
                 <FilterSection title="Gender" activeCount={selectedGenders.size}>
                   <div className="space-y-2">
                     {genderOptions.map((gen) => (

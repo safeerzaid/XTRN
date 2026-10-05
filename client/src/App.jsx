@@ -26,6 +26,7 @@ import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminOrders from './pages/admin/AdminOrders';
+import ScrollToTop from './components/ScrollToTop';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,6 +66,7 @@ function App() {
 
   return (
     <div>
+      <ScrollToTop />
       <Routes>
         {/* Admin Routes */}
         <Route element={<AdminProtectedRoute />}>

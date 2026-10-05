@@ -10,7 +10,7 @@ export const updateProduct = async (req, res) => {
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      result.data,
       { returnDocument: 'after', runValidators: true }
     );
     if (!product) {
@@ -18,7 +18,8 @@ export const updateProduct = async (req, res) => {
     }
     res.json(product);
   } catch (error) {
-    res.status(400).json({ message: 'Failed to update product', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Failed to update product' });
   }
 };
 
@@ -30,6 +31,7 @@ export const deleteProduct = async (req, res) => {
     }
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to delete product', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Failed to delete product' });
   }
 };

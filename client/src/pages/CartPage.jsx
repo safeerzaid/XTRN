@@ -5,6 +5,7 @@ import { FiTrash2, FiMinus, FiPlus, FiArrowRight } from 'react-icons/fi';
 import { useAuth } from '../context/authContext';
 
 import api from '../api/axios';
+import { formatPrice } from '../utils/formatPrice';
 
 function CartPage() {
   const { items, loading, fetchCart, updateQuantity, removeItem, getTotalPrice } = useCartStore();
@@ -98,7 +99,7 @@ function CartPage() {
                             <p className="text-sm text-gray-500 font-medium mt-3">Size: <span className="text-black uppercase">{item.size}</span></p>
                           )}
                         </div>
-                        <p className="text-lg font-semibold text-black">${product.price.toFixed(2)}</p>
+                        <p className="text-lg font-semibold text-black">{formatPrice(product.price)}</p>
                       </div>
 
                       <div className="flex justify-between items-center mt-6 sm:mt-0">
@@ -145,7 +146,7 @@ function CartPage() {
                 <div className="flex flex-col gap-4 mb-6 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-semibold">${total.toFixed(2)}</span>
+                    <span className="font-semibold">{formatPrice(total)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Estimated Shipping</span>
@@ -159,7 +160,7 @@ function CartPage() {
 
                 <div className="flex justify-between items-center border-t border-gray-200 pt-6 mb-8">
                   <span className="font-bold uppercase tracking-wide">Total</span>
-                  <span className="text-xl font-bold">${total.toFixed(2)}</span>
+                  <span className="text-xl font-bold">{formatPrice(total)}</span>
                 </div>
 
                 <button 

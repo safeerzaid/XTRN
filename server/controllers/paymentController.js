@@ -30,10 +30,10 @@ export const razorpayWebhook = async (req, res) => {
 
     if (event.event === 'payment.captured') {
       const payment = event.payload.payment.entity
-      
+
       const order = await Order.findOneAndUpdate(
         { razorpayOrderId: payment.order_id, paymentStatus: 'pending' },
-        { 
+        {
           paymentStatus: 'paid',
           razorpayPaymentId: payment.id,
           paidAt: new Date()

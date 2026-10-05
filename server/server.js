@@ -19,8 +19,8 @@ import { startCancelStaleOrdersJob } from "./jobs/cancelStaleOrders.js";
 const app = express();
 
 app.use(cors({
-   origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
-   credentials: true
+  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+  credentials: true
 }));
 app.use(helmet())
 
@@ -44,6 +44,18 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", orderRoutes);
+
+app.use('/api', (req, res) => {
+  res.status(404).json({ message: 'API route not found' });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.status || 500;
+  res.status(status).json({ 
+    message: status < 500 ? 'Bad Request' : 'Internal Server Error' 
+  });
+});
 
 
 const PORT = process.env.PORT || 5000;

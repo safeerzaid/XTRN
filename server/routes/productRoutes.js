@@ -137,14 +137,12 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Invalid product data', errors: result.error.errors });
     }
 
-    const product = new Product(req.body)
+    const product = new Product(result.data)
     const savedProduct = await product.save()
     res.status(201).json(savedProduct)
   } catch (error) {
-    res.status(400).json({
-      message: 'Failed to create product',
-      error: error.message
-    })
+    console.error(error);
+    res.status(500).json({ message: 'Failed to create product' });
   }
 })
 
