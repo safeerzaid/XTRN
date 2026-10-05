@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import useCartStore from "../../store/cartStore";
 import { useWishlist } from "../../context/WishlistContext";
 import { useAuth } from "../../context/authContext";
+import { formatPrice } from "../../utils/formatPrice";
 
 
 function ProductListCard({ product, pageType = "sport" }) {
@@ -109,11 +110,15 @@ function ProductListCard({ product, pageType = "sport" }) {
 
         {/* IMAGE AREA */}
         <div className="relative aspect-[341/346] bg-transparent overflow-hidden">
-          {product.badge && (
+          {product.badge ? (
             <span className="absolute left-3 top-3 z-10 rounded-md bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-black shadow-sm">
               {product.badge}
             </span>
-          )}
+          ) : (typeof product.originalPrice === 'number' && product.originalPrice > product.price) ? (
+            <span className="absolute left-3 top-3 z-10 rounded-md bg-red-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+              {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+            </span>
+          ) : null}
 
           {/* HEART */}
           <button
@@ -175,7 +180,7 @@ function ProductListCard({ product, pageType = "sport" }) {
             <p className="font-medium text-black text-[14px] md:text-[15px]">
               {formatPrice(product.price)}
             </p>
-            {product.originalPrice != null && (
+            {(typeof product.originalPrice === 'number' && product.originalPrice > product.price) && (
               <p className="text-[13px] text-gray-400 line-through">
                 {formatPrice(product.originalPrice)}
               </p>

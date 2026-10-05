@@ -3,7 +3,7 @@ import Product from '../models/Product.js'
 import User from '../models/User.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import adminMiddleware from '../middleware/adminMiddleware.js'
-import { updateProduct, deleteProduct } from '../controllers/productController.js'
+import { createProduct, updateProduct, deleteProduct } from '../controllers/productController.js'
 const router = express.Router()
 
 
@@ -129,22 +129,7 @@ router.get('/:id', async (req, res) => {
 
 
 // POST /api/products — create a new product
-router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
-  try {
-    const { productSchema } = await import('../validators/productValidator.js');
-    const result = productSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: 'Invalid product data', errors: result.error.errors });
-    }
-
-    const product = new Product(result.data)
-    const savedProduct = await product.save()
-    res.status(201).json(savedProduct)
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to create product' });
-  }
-})
+router.post('/', authMiddleware, adminMiddleware, createProduct)
 
 // PUT /api/products/:id — update a product (admin only)
 router.put('/:id', authMiddleware, adminMiddleware, updateProduct)

@@ -22,8 +22,46 @@ function TrendingProducts() {
         // Filter out Accessories and ensure they have images
         const eligible = allProducts.filter((p) => p.category !== "Accessories" && (p.images || p.image));
         
-        // Select first 8 products for consistency
-        const selected = eligible.slice(0, 8).map((p) => ({
+        // Group by subcategory/category to ensure a diverse mix (e.g. Shoes, T-Shirts, Hoodies)
+        const groups = {};
+        eligible.forEach((p) => {
+          const key = p.subcategory || p.category || 'other';
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(p);
+        });
+
+        // Deterministic sort within each group so it doesn't change on refresh
+        const getHash = (str) => {
+          let h = 0;
+          const s = String(str);
+          for(let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+          return h;
+        };
+        
+        Object.values(groups).forEach(group => {
+          group.sort((a, b) => getHash(a._id || a.name) - getHash(b._id || b.name));
+        });
+
+        // Pick round-robin from each group to guarantee variety in the final 8 products
+        const mixed = [];
+        const groupKeys = Object.keys(groups).sort();
+        let index = 0;
+        
+        while (mixed.length < 8 && mixed.length < eligible.length) {
+          let added = false;
+          for (const key of groupKeys) {
+            if (groups[key][index]) {
+              mixed.push(groups[key][index]);
+              added = true;
+              if (mixed.length >= 8) break;
+            }
+          }
+          if (!added) break;
+          index++;
+        }
+
+        // Format and finalize the selected 8 items
+        const selected = mixed.map((p) => ({
           ...p,
           _id: p._id || p.id // Ensure _id is present for ProductListCard Link
         }));

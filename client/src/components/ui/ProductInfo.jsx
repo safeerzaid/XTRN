@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { FiHeart, FiShoppingBag, FiStar } from "react-icons/fi";
+import { FiHeart, FiShoppingBag } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { useWishlist } from "../../context/WishlistContext";
 import { useAuth } from "../../context/authContext";
+import { formatPrice } from "../../utils/formatPrice";
 
 /**
  * ProductInfo
@@ -20,8 +21,6 @@ function ProductInfo({ product = {} }) {
     discount,
     description = "Engineered for peak performance, this lightweight running tee features moisture-wicking fabric that keeps you dry and comfortable during intense training sessions. The ergonomic cut allows unrestricted movement, making it ideal for athletes who demand the best.",
     sizes       = ["XS", "S", "M", "L", "XL", "XXL"],
-    rating      = 4.5,
-    reviews     = 128,
   } = product;
 
   const [qty, setQty]             = useState(1);
@@ -40,30 +39,6 @@ function ProductInfo({ product = {} }) {
     setTimeout(() => setCart(false), 1800);
   };
 
-  /* ── Star renderer ──────────────────────────────────────────────── */
-  const Stars = ({ value }) => {
-    const full  = Math.floor(value);
-    const half  = value - full >= 0.5;
-    const empty = 5 - full - (half ? 1 : 0);
-    return (
-      <span className="flex items-center gap-0.5">
-        {[...Array(full)].map((_, i) => (
-          <FiStar key={`f${i}`} size={14} className="fill-amber-400 text-amber-400" />
-        ))}
-        {half && (
-          <span className="relative inline-block w-[14px] h-[14px]">
-            <FiStar size={14} className="absolute text-gray-300" />
-            <span className="absolute inset-0 w-1/2 overflow-hidden">
-              <FiStar size={14} className="fill-amber-400 text-amber-400" />
-            </span>
-          </span>
-        )}
-        {[...Array(empty)].map((_, i) => (
-          <FiStar key={`e${i}`} size={14} className="text-gray-300" />
-        ))}
-      </span>
-    );
-  };
 
   return (
     <div className="flex flex-col gap-6 lg:gap-7">
@@ -78,13 +53,7 @@ function ProductInfo({ product = {} }) {
         {name}
       </h1>
 
-      {/* ── Rating Row ────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2">
-        <Stars value={rating} />
-        <span className="font-nav text-[13px] text-gray-500">
-          {rating.toFixed(1)} ({reviews} reviews)
-        </span>
-      </div>
+
 
       {/* ── Divider ───────────────────────────────────────────────── */}
       <div className="h-px bg-gray-100" />

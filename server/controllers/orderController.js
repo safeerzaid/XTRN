@@ -15,9 +15,7 @@ export const createOrder = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    if (!user.isVerified) {
-      return res.status(403).json({ message: 'Please verify your email before placing an order.' });
-    }
+
 
     const result = createOrderSchema.safeParse(req.body)
 

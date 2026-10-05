@@ -17,9 +17,6 @@ function CheckoutPage() {
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [showResend, setShowResend] = useState(false);
-  const [resendMessage, setResendMessage] = useState('');
-  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     fetchCart();
@@ -137,31 +134,11 @@ function CheckoutPage() {
         navigate('/orders');
       }
     } catch (err) {
-      if (err.response?.status === 403 && err.response?.data?.message?.includes('verify your email')) {
-        setError('Please verify your email to place an order.');
-        setShowResend(true);
-      } else {
-        setError(err.response?.data?.message || 'Failed to place order. Please try again.');
-        setShowResend(false);
-      }
+      setError(err.response?.data?.message || 'Failed to place order. Please try again.');
       setIsProcessing(false);
     }
   };
 
-  const handleResend = async () => {
-    setIsResending(true);
-    setResendMessage('');
-    try {
-      const response = await api.post('/auth/resend-verification', { email: user?.email });
-      setResendMessage(response.data.message);
-      setError('');
-      setShowResend(false);
-    } catch (error) {
-      setResendMessage(error.response?.data?.message || 'Failed to resend email');
-    } finally {
-      setIsResending(false);
-    }
-  };
 
   if (items.length === 0) {
     return (
@@ -260,21 +237,6 @@ function CheckoutPage() {
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg flex flex-col gap-2">
                 <span>{error}</span>
-                {showResend && (
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={isResending}
-                    className="font-bold underline hover:text-red-800 disabled:opacity-50 text-left"
-                  >
-                    {isResending ? 'Sending...' : 'Resend verification email'}
-                  </button>
-                )}
-              </div>
-            )}
-            {resendMessage && (
-              <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-lg">
-                {resendMessage}
               </div>
             )}
 

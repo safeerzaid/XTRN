@@ -32,9 +32,9 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
         ...product,
         sizes: product.sizes?.join(', ') || '',
         images: product.images?.default?.join(', ') || '',
-        originalPrice: product.originalPrice || '',
-        discount: product.discount || 0,
-        stock: product.stock || 0
+        originalPrice: product.originalPrice ?? '',
+        discount: product.discount ?? '',
+        stock: product.stock ?? 0
       });
     } else {
       setFormData(INITIAL_STATE);
@@ -46,7 +46,7 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'number' ? Number(value) : value }));
+    setFormData(prev => ({ ...prev, [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value }));
   };
 
   const handleSubmit = async (e) => {
@@ -54,12 +54,14 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
     setLoading(true);
     setError('');
 
+    const parseOptionalNumber = (val) => (val === '' || val == null) ? null : Number(val);
+
     const payload = {
       ...formData,
-      price: formData.price === '' ? undefined : Number(formData.price),
-      originalPrice: formData.originalPrice === '' ? undefined : Number(formData.originalPrice),
-      discount: formData.discount === '' ? undefined : Number(formData.discount),
-      stock: formData.stock === '' ? undefined : Number(formData.stock),
+      price: parseOptionalNumber(formData.price),
+      originalPrice: parseOptionalNumber(formData.originalPrice),
+      discount: parseOptionalNumber(formData.discount),
+      stock: parseOptionalNumber(formData.stock),
       sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
       images: {
         default: formData.images ? formData.images.split(',').map(s => s.trim()).filter(Boolean) : []

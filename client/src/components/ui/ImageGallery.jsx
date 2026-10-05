@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ZoomImage from "./ZoomImage";
 
 /**
  * ImageGallery
@@ -17,10 +18,11 @@ function ImageGallery({ images = [], name = "Product" }) {
 
       {/* ── Main Image ──────────────────────────────────────────────── */}
       <div className="relative w-full aspect-square bg-[#f5f5f5] rounded-2xl overflow-hidden">
-        <img
+        <ZoomImage
           src={mainImage}
           alt={name}
-          className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300"
+          className="absolute inset-0 w-full h-full"
+          imgClassName="transition-opacity duration-300"
           key={activeIndex}
         />
       </div>

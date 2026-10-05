@@ -1,6 +1,22 @@
 import Product from '../models/Product.js';
 import { productSchema } from '../validators/productValidator.js';
 
+export const createProduct = async (req, res) => {
+  try {
+    const result = productSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: 'Invalid product data', errors: result.error.errors });
+    }
+
+    const product = new Product(result.data);
+    const savedProduct = await product.save();
+    res.status(201).json(savedProduct);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to create product' });
+  }
+};
+
 export const updateProduct = async (req, res) => {
   try {
     const result = productSchema.safeParse(req.body);

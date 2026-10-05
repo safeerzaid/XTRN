@@ -9,6 +9,7 @@ import {
 import jwt from "jsonwebtoken"
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
+import { getCookieOptions } from "../utils/cookieOptions.js";
 
 const addRefreshToken = (user, tokenHash) => {
   user.refreshTokens.push({ tokenHash });
@@ -51,7 +52,7 @@ export const signup = async (req, res) => {
       verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
     })
 
-    const clientUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const verifyLink = `${clientUrl}/verify-email/${rawToken}`;
 
     try {
@@ -70,29 +71,8 @@ export const signup = async (req, res) => {
       // We continue since the user can request a resend later
     }
 
-    const accessToken = generateAccessToken(newUser._id);
-    const refreshToken = generateRefreshToken(newUser._id);
-    const refreshTokenHash = hashToken(refreshToken);
-
-    addRefreshToken(newUser, refreshTokenHash);
-    await newUser.save();
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
-
-    const userResponse = newUser.toObject()
-    delete userResponse.password
-    delete userResponse.refreshTokens
-    delete userResponse.verificationToken
-
     res.status(201).json({
-      message: 'User created successfully.',
-      accessToken,
-      user: userResponse
+      message: 'User created successfully. Please check your email to verify your account.',
     })
 
   } catch (error) {
@@ -140,6 +120,12 @@ export const login = async (req, res) => {
       });
     }
 
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Please verify your email before logging in"
+      });
+    }
+
     const accessToken = generateAccessToken(user._id)
     const refreshToken = generateRefreshToken(user._id)
     const refreshTokenHash = hashToken(refreshToken)
@@ -148,12 +134,7 @@ export const login = async (req, res) => {
 
     await user.save()
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
+    res.cookie('refreshToken', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
     // Send login notification email asynchronously (fire-and-forget)
     try {
@@ -221,17 +202,19 @@ export const refresh = async (req, res) => {
       })
     }
 
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Please verify your email before logging in"
+      })
+    }
+
     const incomingHash = hashToken(refreshToken)
     const tokenExists = user.refreshTokens.some(t => t.tokenHash === incomingHash)
 
     if (!tokenExists) {
       user.refreshTokens = []
       await user.save()
-      res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-      })
+      res.clearCookie('refreshToken', getCookieOptions());
       return res.status(401).json({
         message: "Session expired. Please log in again."
       })
@@ -244,12 +227,7 @@ export const refresh = async (req, res) => {
     addRefreshToken(user, newRefreshTokenHash)
     await user.save()
 
-    res.cookie('refreshToken', newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
+    res.cookie('refreshToken', newRefreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
 
     const accessToken = generateAccessToken(user._id)
 
@@ -294,22 +272,14 @@ export const logout = async (req, res) => {
       }
     }
 
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
+    res.clearCookie('refreshToken', getCookieOptions());
 
     return res.status(200).json({
       message: "logout successfull"
     });
 
   } catch (error) {
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
+    res.clearCookie('refreshToken', getCookieOptions());
 
     return res.status(200).json({
       message: "logout successfull"
@@ -334,7 +304,7 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
     await user.save();
 
-    const clientUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const resetLink = `${clientUrl}/reset-password/${rawToken}`;
 
     try {
@@ -398,11 +368,7 @@ export const resetPassword = async (req, res) => {
       console.error('Failed to send password confirmation email:', emailError);
     }
 
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-    });
+    res.clearCookie('refreshToken', getCookieOptions());
 
     res.status(200).json({ message: 'Password reset successful' });
   } catch (error) {
@@ -459,7 +425,7 @@ export const resendVerification = async (req, res) => {
     user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
     await user.save();
 
-    const clientUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const verifyLink = `${clientUrl}/verify-email/${rawToken}`;
 
     try {

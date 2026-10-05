@@ -6,6 +6,7 @@ import ProductListCard from "../components/ui/ProductListCard";
 import api from "../api/axios";
 import useCartStore from "../store/cartStore";
 import { formatPrice } from '../utils/formatPrice';
+import ZoomImage from "../components/ui/ZoomImage";
 
 function ProductDetailPage() {
   const [product, setProduct] = useState(null);
@@ -143,10 +144,11 @@ function ProductDetailPage() {
             </div>
 
             <div className="order-1 lg:order-2 flex-1 aspect-square rounded-2xl bg-gray-100 overflow-hidden">
-              <img
+              <ZoomImage
                 src={selectedImage}
                 alt={product.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full"
+                key={selectedImage}
               />
             </div>
 
@@ -163,10 +165,15 @@ function ProductDetailPage() {
                 <span className="text-xl sm:text-2xl font-semibold text-black font-nav">
                   {formatPrice(product.price)}
                 </span>
-                {product.originalPrice && (
-                  <span className="text-base text-gray-400 line-through font-nav">
-                    {formatPrice(product.originalPrice)}
-                  </span>
+                {(typeof product.originalPrice === 'number' && product.originalPrice > product.price) && (
+                  <>
+                    <span className="text-base text-gray-400 line-through font-nav">
+                      {formatPrice(product.originalPrice)}
+                    </span>
+                    <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded font-nav">
+                      {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                    </span>
+                  </>
                 )}
               </div>
             </div>
