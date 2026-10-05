@@ -120,11 +120,7 @@ export const login = async (req, res) => {
       });
     }
 
-    if (!user.isVerified) {
-      return res.status(403).json({
-        message: "Please verify your email before logging in"
-      });
-    }
+    // Email verification check removed as per user request
 
     const accessToken = generateAccessToken(user._id)
     const refreshToken = generateRefreshToken(user._id)
@@ -202,11 +198,7 @@ export const refresh = async (req, res) => {
       })
     }
 
-    if (!user.isVerified) {
-      return res.status(403).json({
-        message: "Please verify your email before logging in"
-      })
-    }
+    // Email verification check removed as per user request
 
     const incomingHash = hashToken(refreshToken)
     const tokenExists = user.refreshTokens.some(t => t.tokenHash === incomingHash)

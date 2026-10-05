@@ -9,9 +9,6 @@ const Login = ({ onClose, onSignupClick }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [showResend, setShowResend] = useState(false);
-  const [resendMessage, setResendMessage] = useState('');
-  const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -60,32 +57,13 @@ const Login = ({ onClose, onSignupClick }) => {
       handleClose();
 
     } catch (error) {
-      if (error.response?.status === 403) {
-        setErrorMessage(error.response.data.message);
-        setShowResend(true);
-      } else {
-        const msg = error.response?.data?.message || (error.response ? "Login failed. Please check your credentials." : "Cannot connect to server. Please ensure the backend is running.");
-        setErrorMessage(msg);
-        setShowResend(false);
-      }
+      const msg = error.response?.data?.message || (error.response ? "Login failed. Please check your credentials." : "Cannot connect to server. Please ensure the backend is running.");
+      setErrorMessage(msg);
       console.error("Login failed:", error);
     }
   };
 
-  const handleResend = async () => {
-    setIsResending(true);
-    setResendMessage('');
-    try {
-      const response = await api.post("/auth/resend-verification", { email });
-      setResendMessage(response.data.message);
-      setErrorMessage('');
-      setShowResend(false);
-    } catch (error) {
-      setResendMessage(error.response?.data?.message || 'Failed to resend email');
-    } finally {
-      setIsResending(false);
-    }
-  };
+  // Resend verification logic removed as per user request
 
   
   return (
@@ -117,21 +95,6 @@ const Login = ({ onClose, onSignupClick }) => {
           {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-xs sm:text-sm px-3 py-2 rounded-lg text-center flex flex-col gap-2">
               <span>{errorMessage}</span>
-              {showResend && (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={isResending}
-                  className="font-bold underline hover:text-red-800 disabled:opacity-50"
-                >
-                  {isResending ? 'Sending...' : 'Resend verification email'}
-                </button>
-              )}
-            </div>
-          )}
-          {resendMessage && (
-            <div className="bg-green-50 border border-green-200 text-green-700 text-xs sm:text-sm px-3 py-2 rounded-lg text-center">
-              {resendMessage}
             </div>
           )}
           <div className="relative">
