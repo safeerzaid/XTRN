@@ -56,7 +56,7 @@ export const razorpayWebhook = async (req, res) => {
 
     if (event.event === 'payment.failed') {
       const payment = event.payload.payment.entity
-      console.log(`Payment failed attempt: order id ${payment.order_id}, payment id ${payment.id}`)
+      console.error(`Payment failed attempt: order id ${payment.order_id}, payment id ${payment.id}`)
     }
 
     // Razorpay-ku eppozhum vegam 200 kodukkanam

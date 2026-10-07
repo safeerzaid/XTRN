@@ -20,3 +20,7 @@ export const generateRefreshToken = (userId) => {
 export const hashToken = (token) => {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
+
+export const hashOtp = (otp) => {
+  return crypto.createHmac('sha256', process.env.JWT_SECRET || 'secret').update(otp).digest('hex');
+}

@@ -27,7 +27,6 @@ export default function ZoomImage({ src, alt, zoom = 2, className = "", imgClass
 
   const handlePointerEnter = (e) => {
     if (e.pointerType === 'touch') return;
-    console.log("ZoomImage enter", e.pointerType);
     if (containerRef.current) {
       const { left, top, width, height } = containerRef.current.getBoundingClientRect();
       const x = ((e.clientX - left) / width) * 100;
@@ -39,7 +38,6 @@ export default function ZoomImage({ src, alt, zoom = 2, className = "", imgClass
 
   const handlePointerLeave = (e) => {
     if (e.pointerType === 'touch') return;
-    console.log("ZoomImage leave", e.pointerType);
     setIsHovering(false);
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);

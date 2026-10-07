@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import Order from '../models/Order.js'
 import Cart from '../models/Cart.js'
 import User from '../models/User.js'
@@ -119,6 +120,7 @@ export const createOrder = async (req, res) => {
 
     res.status(201).json(order)
   } catch (error) {
+    console.error('Create order error:', error);
     await rollbackStock(decremented)
     res.status(500).json({ message: 'Failed to create order' })
   }
@@ -138,6 +140,7 @@ export const getOrders = async (req, res) => {
       .sort({ createdAt: -1 })
     res.status(200).json(orders)
   } catch (error) {
+    console.error('Fetch orders error:', error);
     res.status(500).json({ message: 'Failed to fetch orders' })
   }
 }
@@ -145,6 +148,9 @@ export const getOrders = async (req, res) => {
 // GET /api/orders/:id — single order fetch cheyyuka (own order maathram)
 export const getOrderById = async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid order ID format' });
+    }
     const order = await Order.findById(req.params.id)
 
     if (!order) {
@@ -157,6 +163,7 @@ export const getOrderById = async (req, res) => {
 
     res.status(200).json(order)
   } catch (error) {
+    console.error('Fetch order by id error:', error);
     res.status(500).json({ message: 'Failed to fetch order' })
   }
 }
@@ -169,12 +176,16 @@ export const getAllOrders = async (req, res) => {
       .sort({ createdAt: -1 });
     res.status(200).json(orders);
   } catch (error) {
+    console.error('Fetch all orders error:', error);
     res.status(500).json({ message: 'Failed to fetch all orders' });
   }
 };
 
 export const updateOrderStatus = async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid order ID format' });
+    }
     const { status } = req.body;
     const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(status)) {
@@ -190,6 +201,7 @@ export const updateOrderStatus = async (req, res) => {
     }
     res.status(200).json(order);
   } catch (error) {
+    console.error('Update order status error:', error);
     res.status(500).json({ message: 'Failed to update order status' });
   }
 };

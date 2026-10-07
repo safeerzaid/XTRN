@@ -19,52 +19,26 @@ function TrendingProducts() {
         const response = await api.get("/products");
         const allProducts = response.data || [];
 
-        // Filter out Accessories and ensure they have images
-        const eligible = allProducts.filter((p) => p.category !== "Accessories" && (p.images || p.image));
-        
-        // Group by subcategory/category to ensure a diverse mix (e.g. Shoes, T-Shirts, Hoodies)
-        const groups = {};
-        eligible.forEach((p) => {
-          const key = p.subcategory || p.category || 'other';
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(p);
-        });
+        // Exact IDs of the "Best Sellers" requested by the user
+        const bestSellerIds = [
+          "6ab37a798fb0c7a49c50cae4", // XTRN Crew Neck Sweatshirt
+          "6ab37a798fb0c7a49c50cae0", // XTRN Heavyweight Cotton Hoodie
+          "6ab37a798fb0c7a49c50cb27", // XTRN Trail Blazer Hiking Boots
+          "6ab37a798fb0c7a49c50cacd", // XTRN Women's Oversized Tee
+          "6ab37a798fb0c7a49c50cb35", // XTRN ProWet All-Weather Jacket
+          "6ab37a798fb0c7a49c50cacf", // XTRN Classic Muscle Tank
+          "6ab37a798fb0c7a49c50cb56", // XTRN ClassicShield Sunglasses
+          "6ab37a798fb0c7a49c50cae6"  // XTRN Oversized Sweatshirt
+        ];
 
-        // Deterministic sort within each group so it doesn't change on refresh
-        const getHash = (str) => {
-          let h = 0;
-          const s = String(str);
-          for(let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-          return h;
-        };
-        
-        Object.values(groups).forEach(group => {
-          group.sort((a, b) => getHash(a._id || a.name) - getHash(b._id || b.name));
-        });
-
-        // Pick round-robin from each group to guarantee variety in the final 8 products
-        const mixed = [];
-        const groupKeys = Object.keys(groups).sort();
-        let index = 0;
-        
-        while (mixed.length < 8 && mixed.length < eligible.length) {
-          let added = false;
-          for (const key of groupKeys) {
-            if (groups[key][index]) {
-              mixed.push(groups[key][index]);
-              added = true;
-              if (mixed.length >= 8) break;
-            }
-          }
-          if (!added) break;
-          index++;
-        }
-
-        // Format and finalize the selected 8 items
-        const selected = mixed.map((p) => ({
-          ...p,
-          _id: p._id || p.id // Ensure _id is present for ProductListCard Link
-        }));
+        // Map IDs to product objects and preserve the exact order
+        const selected = bestSellerIds
+          .map(id => allProducts.find(p => p._id === id || p.id === id))
+          .filter(Boolean)
+          .map(p => ({
+            ...p,
+            _id: p._id || p.id
+          }));
         
         setDisplayProducts(selected);
       } catch (error) {

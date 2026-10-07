@@ -1,18 +1,18 @@
 import express from 'express'
-import {login, signup, refresh, logout, forgotPassword, resetPassword, verifyEmail, resendVerification, changePassword} from '../controllers/authController.js'
-import { authLimiter, looseLimiter } from '../middleware/rateLimiter.js'
+import {login, signup, refresh, logout, forgotPassword, resetPassword, verifyOtp, resendOtp, changePassword} from '../controllers/authController.js'
+import { loginLimiter, signupLimiter, forgotPasswordLimiter, resetPasswordLimiter, changePasswordLimiter, looseLimiter, otpLimiter } from '../middleware/rateLimiter.js'
 import verifyToken from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
-router.post('/signup', authLimiter, signup)
-router.post('/login', authLimiter, login)
+router.post('/signup', signupLimiter, signup)
+router.post('/login', loginLimiter, login)
 router.post('/refresh', looseLimiter, refresh)
 router.post('/logout', looseLimiter, logout)
-router.post('/forgot-password', authLimiter, forgotPassword)
-router.post('/reset-password/:token', authLimiter, resetPassword)
-router.post('/change-password', authLimiter, verifyToken, changePassword)
-router.get('/verify-email/:token', looseLimiter, verifyEmail)
-router.post('/resend-verification', authLimiter, resendVerification)
+router.post('/forgot-password', forgotPasswordLimiter, forgotPassword)
+router.post('/reset-password/:token', resetPasswordLimiter, resetPassword)
+router.post('/change-password', changePasswordLimiter, verifyToken, changePassword)
+router.post('/verify-otp', otpLimiter, verifyOtp)
+router.post('/resend-otp', otpLimiter, resendOtp)
 
 export default router;

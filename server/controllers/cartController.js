@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import Cart from '../models/Cart.js'
 
 // GET /api/cart — user-inte cart fetch cheyyuka
@@ -11,6 +12,7 @@ export const getCart = async (req, res) => {
 
     res.status(200).json(cart)
   } catch (error) {
+    console.error('Fetch cart error:', error);
     res.status(500).json({ message: 'Failed to fetch cart' })
   }
 }
@@ -46,6 +48,7 @@ export const addToCart = async (req, res) => {
     const populatedCart = await cart.populate('items.product')
     res.status(200).json(populatedCart)
   } catch (error) {
+    console.error('Add to cart error:', error);
     res.status(500).json({ message: 'Failed to add item to cart' })
   }
 }
@@ -55,6 +58,9 @@ export const addToCart = async (req, res) => {
 export const updateCartItem = async (req, res) => {
   try {
     const { itemId } = req.params
+    if (!mongoose.isValidObjectId(itemId)) {
+      return res.status(400).json({ message: 'Invalid item ID format' });
+    }
     const { quantity } = req.body
 
     if (!quantity || quantity < 1) {
@@ -79,6 +85,7 @@ export const updateCartItem = async (req, res) => {
     const populatedCart = await cart.populate('items.product')
     res.status(200).json(populatedCart)
   } catch (error) {
+    console.error('Update cart item error:', error);
     res.status(500).json({ message: 'Failed to update cart item' })
   }
 }
@@ -88,6 +95,9 @@ export const updateCartItem = async (req, res) => {
 export const removeCartItem = async (req, res) => {
   try {
     const { itemId } = req.params
+    if (!mongoose.isValidObjectId(itemId)) {
+      return res.status(400).json({ message: 'Invalid item ID format' });
+    }
 
     const cart = await Cart.findOne({ user: req.user.id })
 
@@ -101,6 +111,7 @@ export const removeCartItem = async (req, res) => {
     const populatedCart = await cart.populate('items.product')
     res.status(200).json(populatedCart)
   } catch (error) {
+    console.error('Remove cart item error:', error);
     res.status(500).json({ message: 'Failed to remove cart item' })
   }
 }

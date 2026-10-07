@@ -1,10 +1,11 @@
 import User from "../models/User.js"
-import { signupSchema, loginSchema } from "../validators/authValidator.js";
+import { signupSchema, loginSchema, verifyOtpSchema, resendOtpSchema } from "../validators/authValidator.js";
 import bcrypt from "bcryptjs";
 import {
   generateAccessToken,
   generateRefreshToken,
-  hashToken
+  hashToken,
+  hashOtp
 } from '../utils/token.js'
 import jwt from "jsonwebtoken"
 import crypto from "crypto";
@@ -16,6 +17,40 @@ const addRefreshToken = (user, tokenHash) => {
   while (user.refreshTokens.length > 5) {
     user.refreshTokens.shift();
   }
+};
+
+const sendOtpEmail = async (user, otp) => {
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Your Verification Code - XTRN Store',
+      html: `
+        <div style="font-family: sans-serif; text-align: center;">
+          <h2>Your Verification Code</h2>
+          <p>Please use the following 6-digit code to verify your account.</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 4px; margin: 20px 0; padding: 10px; background: #f4f4f4; border-radius: 8px;">
+            ${otp}
+          </div>
+          <p>This code <strong>expires in 10 minutes</strong>.</p>
+          <p style="color: #888; font-size: 12px; margin-top: 20px;">If this was not you, ignore this email.</p>
+          <p style="color: #888; font-size: 12px;">From XTRN</p>
+        </div>
+      `,
+      text: `Your Verification Code is ${otp}. It expires in 10 minutes. If this was not you, ignore this email. From XTRN`
+    });
+  } catch (err) {
+    console.error('Failed to send OTP email:', err);
+  }
+};
+
+const generateAndSetOtp = async (user) => {
+  const otp = crypto.randomInt(100000, 999999).toString();
+  user.emailOtpHash = hashOtp(otp);
+  user.emailOtpExpires = Date.now() + 10 * 60 * 1000;
+  user.emailOtpAttempts = 0;
+  user.emailOtpLastSentAt = Date.now();
+  await user.save();
+  await sendOtpEmail(user, otp);
 };
 
 export const signup = async (req, res) => {
@@ -40,40 +75,18 @@ export const signup = async (req, res) => {
       });
     }
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = hashToken(rawToken);
-
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      isVerified: false,
-      verificationToken: hashedToken,
-      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
-    })
+      isVerified: false
+    });
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    const verifyLink = `${clientUrl}/verify-email/${rawToken}`;
-
-    try {
-      await sendEmail({
-        to: newUser.email,
-        subject: 'Verify your email - XTRN Store',
-        html: `
-          <p>Hi ${newUser.name},</p>
-          <p>Please verify your email address by clicking the link below:</p>
-          <a href="${verifyLink}">${verifyLink}</a>
-          <p>This link expires in 24 hours.</p>
-        `
-      });
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      // We continue since the user can request a resend later
-    }
+    await generateAndSetOtp(newUser);
 
     res.status(201).json({
-      message: 'User created successfully. Please check your email to verify your account.',
-    })
+      message: 'User created successfully. Please check your email for the verification code.',
+    });
 
   } catch (error) {
     if (error.code === 11000) {
@@ -120,7 +133,15 @@ export const login = async (req, res) => {
       });
     }
 
-    // Email verification check removed as per user request
+    if (!user.isVerified) {
+      if (!user.emailOtpLastSentAt || Date.now() - user.emailOtpLastSentAt.getTime() > 60000) {
+        await generateAndSetOtp(user);
+      }
+      return res.status(403).json({
+        message: "Please verify your email before logging in",
+        needsVerification: true
+      });
+    }
 
     const accessToken = generateAccessToken(user._id)
     const refreshToken = generateRefreshToken(user._id)
@@ -165,9 +186,7 @@ export const login = async (req, res) => {
 
 
   } catch (error) {
-
-    console.log(error);
-
+    console.error('Login error:', error);
     res.status(500).json({
       message: "Server Error",
     });
@@ -198,7 +217,11 @@ export const refresh = async (req, res) => {
       })
     }
 
-    // Email verification check removed as per user request
+    if (!user.isVerified) {
+      return res.status(403).json({
+        message: "Please verify your email before logging in"
+      });
+    }
 
     const incomingHash = hashToken(refreshToken)
     const tokenExists = user.refreshTokens.some(t => t.tokenHash === incomingHash)
@@ -234,8 +257,7 @@ export const refresh = async (req, res) => {
     })
 
   } catch (error) {
-    console.log(error)
-
+    console.error('Refresh token error:', error);
     return res.status(401).json({
       message: "Invalid or expired refresh token"
     })
@@ -271,6 +293,7 @@ export const logout = async (req, res) => {
     });
 
   } catch (error) {
+    console.error('Logout error:', error);
     res.clearCookie('refreshToken', getCookieOptions());
 
     return res.status(200).json({
@@ -369,76 +392,93 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-export const verifyEmail = async (req, res) => {
+export const verifyOtp = async (req, res) => {
   try {
-    const { token } = req.params;
-    const hashedToken = hashToken(token);
+    const result = verifyOtpSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid data" });
+    }
 
-    const user = await User.findOne({
-      verificationToken: hashedToken,
-      verificationTokenExpires: { $gt: Date.now() }
-    });
+    const { email, otp } = result.data;
+    const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired verification token' });
+    if (!user || user.isVerified || !user.emailOtpHash || !user.emailOtpExpires || user.emailOtpExpires < Date.now()) {
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+
+    const expectedHash = Buffer.from(user.emailOtpHash);
+    const providedHash = Buffer.from(hashOtp(otp));
+
+    const valid = expectedHash.length === providedHash.length && crypto.timingSafeEqual(expectedHash, providedHash);
+
+    if (!valid) {
+      user.emailOtpAttempts += 1;
+      if (user.emailOtpAttempts >= 5) {
+        user.emailOtpHash = undefined;
+        user.emailOtpExpires = undefined;
+        await user.save();
+        return res.status(400).json({ message: "Too many failed attempts. Request a new code." });
+      }
+      await user.save();
+      return res.status(400).json({ message: "Invalid or expired code" });
     }
 
     user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
+    user.emailOtpHash = undefined;
+    user.emailOtpExpires = undefined;
+    user.emailOtpAttempts = undefined;
+    user.emailOtpLastSentAt = undefined;
+
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    const refreshTokenHash = hashToken(refreshToken);
+
+    addRefreshToken(user, refreshTokenHash);
     await user.save();
 
-    res.status(200).json({ message: 'Email verified successfully' });
+    res.cookie('refreshToken', refreshToken, getCookieOptions(7 * 24 * 60 * 60 * 1000));
+
+    return res.status(200).json({
+      message: "Email verified and login successful",
+      accessToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
+    });
+
   } catch (error) {
-    console.error('Verify email error:', error);
-    res.status(500).json({ message: 'Error verifying email' });
+    console.error('Verify OTP error:', error);
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 
-export const resendVerification = async (req, res) => {
+export const resendOtp = async (req, res) => {
   try {
-    let { email } = req.body;
-    email = email?.toLowerCase().trim();
+    const result = resendOtpSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid data" });
+    }
+
+    const { email } = result.data;
     const user = await User.findOne({ email });
 
-    // Return generic success to avoid email enumeration
-    if (!user) {
-      return res.status(200).json({ message: 'If the email exists, a verification link has been sent' });
+    if (!user || user.isVerified) {
+      return res.status(200).json({ message: "If the email exists, an OTP has been sent" });
     }
 
-    if (user.isVerified) {
-      return res.status(400).json({ message: 'Email is already verified' });
+    if (user.emailOtpLastSentAt && Date.now() - user.emailOtpLastSentAt.getTime() < 60000) {
+      return res.status(200).json({ message: "If the email exists, an OTP has been sent" });
     }
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = hashToken(rawToken);
-
-    user.verificationToken = hashedToken;
-    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
-    await user.save();
-
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-    const verifyLink = `${clientUrl}/verify-email/${rawToken}`;
-
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: 'Verify your email - XTRN Store',
-        html: `
-          <p>Hi ${user.name},</p>
-          <p>Please verify your email address by clicking the link below:</p>
-          <a href="${verifyLink}">${verifyLink}</a>
-          <p>This link expires in 24 hours.</p>
-        `
-      });
-    } catch (emailError) {
-      console.error('Failed to send resend verification email:', emailError);
-    }
-
-    res.status(200).json({ message: 'If the email exists, a verification link has been sent' });
+    await generateAndSetOtp(user);
+    
+    return res.status(200).json({ message: "If the email exists, an OTP has been sent" });
   } catch (error) {
-    console.error('Resend verification error:', error);
-    res.status(500).json({ message: 'Error resending verification email' });
+    console.error('Resend OTP error:', error);
+    res.status(500).json({ message: 'Server Error' });
   }
 };
 

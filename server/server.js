@@ -87,7 +87,7 @@ app.use('/api', (req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error('Unhandled express error:', err);
   const status = err.status || 500;
   res.status(status).json({ 
     message: status < 500 ? 'Bad Request' : 'Internal Server Error' 

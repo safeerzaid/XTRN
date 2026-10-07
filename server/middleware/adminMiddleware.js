@@ -8,6 +8,7 @@ const adminMiddleware = async (req, res, next) => {
     }
     next();
   } catch (error) {
+    console.error('Admin middleware error:', error)
     res.status(500).json({ message: 'Server Error verifying admin role' });
   }
 };

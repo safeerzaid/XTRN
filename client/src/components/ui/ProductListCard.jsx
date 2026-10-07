@@ -87,7 +87,6 @@ function ProductListCard({ product, pageType = "sport" }) {
     const defaultSize = product.sizes?.[0];
 
     if (!defaultSize) {
-      console.log("No size available for this product");
       return;
     }
 

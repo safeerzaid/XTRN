@@ -92,24 +92,7 @@ function FeaturedSidebar({ products, featuredCategory, filters, onFiltersChange 
         </FilterSection>
       )}
 
-      {/* ── Brand ───────────────────────────────────────────────────────── */}
-      {brandOptions.length > 0 && (
-        <FilterSection title="Brand" activeCount={brands.size}>
-          <div className="space-y-2">
-            {brandOptions.map(b => (
-              <label key={b} className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={brands.has(b)}
-                  onChange={() => toggleItem('brands', b)}
-                  className="h-4 w-4 rounded border-gray-300 accent-gray-900"
-                />
-                <span className="font-nav text-[16px] text-gray-700">{b}</span>
-              </label>
-            ))}
-          </div>
-        </FilterSection>
-      )}
+
 
       {/* ── Size (hidden for accessories) ───────────────────────────────── */}
       {showSizes && (

@@ -11,7 +11,7 @@ const useCartStore = create((set, get) => ({
       const response = await api.get('/cart')
       set({ items: response.data.items || [], loading: false })
     } catch (error) {
-      console.log('Failed to fetch cart:', error)
+      console.error('Failed to fetch cart:', error)
       set({ loading: false })
     }
   },
@@ -21,7 +21,7 @@ const useCartStore = create((set, get) => ({
       const response = await api.post('/cart', { productId, size, quantity })
       set({ items: response.data.items })
     } catch (error) {
-      console.log('Failed to add item:', error)
+      console.error('Failed to add item:', error)
     }
   },
 
@@ -30,7 +30,7 @@ const useCartStore = create((set, get) => ({
       const response = await api.patch(`/cart/${itemId}`, { quantity })
       set({ items: response.data.items })
     } catch (error) {
-      console.log('Failed to update quantity:', error)
+      console.error('Failed to update quantity:', error)
     }
   },
 
@@ -39,7 +39,7 @@ const useCartStore = create((set, get) => ({
       const response = await api.delete(`/cart/${itemId}`)
       set({ items: response.data.items })
     } catch (error) {
-      console.log('Failed to remove item:', error)
+      console.error('Failed to remove item:', error)
     }
   },
 

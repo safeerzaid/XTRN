@@ -4,11 +4,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/images/logo/logo.png';
 import api from "../api/axios";
 import { useAuth } from "../context/authContext";
+import OtpVerification from "./OtpVerification";
 
 const Login = ({ onClose, onSignupClick }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showOtp, setShowOtp] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -57,13 +59,16 @@ const Login = ({ onClose, onSignupClick }) => {
       handleClose();
 
     } catch (error) {
-      const msg = error.response?.data?.message || (error.response ? "Login failed. Please check your credentials." : "Cannot connect to server. Please ensure the backend is running.");
-      setErrorMessage(msg);
+      if (error.response?.data?.needsVerification) {
+        setShowOtp(true);
+      } else {
+        const msg = error.response?.data?.message || (error.response ? "Login failed. Please check your credentials." : "Cannot connect to server. Please ensure the backend is running.");
+        setErrorMessage(msg);
+      }
       console.error("Login failed:", error);
     }
   };
 
-  // Resend verification logic removed as per user request
 
   
   return (
@@ -91,6 +96,16 @@ const Login = ({ onClose, onSignupClick }) => {
           </h2>
         </div>
 
+        {showOtp && (
+          <OtpVerification 
+            email={email} 
+            onClose={handleClose} 
+            onSuccess={handleClose} 
+            onGoBack={() => setShowOtp(false)}
+          />
+        )}
+
+        {!showOtp && (
         <form onSubmit={handleLogin} className="flex flex-col gap-4 sm:gap-5">
           {errorMessage && (
             <div className="bg-red-50 border border-red-200 text-red-600 text-xs sm:text-sm px-3 py-2 rounded-lg text-center flex flex-col gap-2">
@@ -142,6 +157,7 @@ const Login = ({ onClose, onSignupClick }) => {
             Log In
           </button>
         </form>
+        )}
 
         <div className="mt-5 text-center">
           <p className="text-sm text-gray-500">

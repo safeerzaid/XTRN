@@ -14,7 +14,7 @@ router.get('/', authmiddleWare, async (req, res) => {
 
     return res.json({ user })
   } catch (error) {
-    console.log(error)
+    console.error('Get profile error:', error)
     return res.status(500).json({ message: 'Server Error' })
   }
 })
@@ -47,7 +47,7 @@ router.patch('/', authmiddleWare, async (req, res) => {
 
     return res.json({ user })
   } catch (error) {
-    console.log(error)
+    console.error('Update profile error:', error)
     return res.status(500).json({ message: 'Server Error' })
   }
 })

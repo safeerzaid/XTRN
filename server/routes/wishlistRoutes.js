@@ -24,7 +24,7 @@ router.get('/', authmiddleWare, async (req, res) => {
 
     return res.status(200).json({ products: validProducts });
   } catch (error) {
-    console.log(error);
+    console.error('Fetch wishlist error:', error);
     return res.status(500).json({ message: 'Server Error' });
   }
 });
@@ -60,7 +60,7 @@ router.post('/:productId', authmiddleWare, async (req, res) => {
 
     return res.status(200).json({ message: 'Product added to wishlist' });
   } catch (error) {
-    console.log(error);
+    console.error('Add to wishlist error:', error);
     return res.status(500).json({ message: 'Server Error' });
   }
 });
@@ -81,7 +81,7 @@ router.delete('/:productId', authmiddleWare, async (req, res) => {
 
     return res.status(200).json({ message: 'Product removed from wishlist' });
   } catch (error) {
-    console.log(error);
+    console.error('Remove from wishlist error:', error);
     return res.status(500).json({ message: 'Server Error' });
   }
 });

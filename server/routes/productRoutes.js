@@ -1,4 +1,5 @@
 import express from 'express'
+import mongoose from 'mongoose'
 import Product from '../models/Product.js'
 import User from '../models/User.js'
 import authMiddleware from '../middleware/authMiddleware.js'
@@ -14,20 +15,30 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const { sport, department, category, section, subcategory, featuredCategory } = req.query
+    const stringParams = [sport, department, category, section, subcategory, featuredCategory];
+    if (stringParams.some(p => p !== undefined && typeof p !== 'string')) {
+      return res.status(400).json({ message: 'Invalid query parameter format' });
+    }
+
     const filter = {} 
     
     if (sport) {
-      if (sport.toLowerCase().endsWith('-shoes')) {
-        const baseSport = sport.substring(0, sport.length - 6) // e.g. 'running'
+      const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const safeSport = escapeRegex(sport);
+      
+      if (sport.toLowerCase().endsWith('-shoes') && sport.length > 6) {
+        const baseSport = sport.substring(0, sport.length - 6); // e.g. 'running'
+        const safeBaseSport = escapeRegex(baseSport);
+        
         filter.$or = [
-          { sport: { $regex: new RegExp(`^${baseSport}$`, 'i') }, section: 'Footwear' },
-          { category: { $regex: new RegExp(`^${baseSport} shoes$`, 'i') } }
-        ]
+          { sport: { $regex: new RegExp(`^${safeBaseSport}$`, 'i') }, section: 'Footwear' },
+          { category: { $regex: new RegExp(`^${safeBaseSport} shoes$`, 'i') } }
+        ];
       } else {
         filter.$or = [
-          { sport: { $regex: new RegExp(`^${sport}$`, 'i') } },
-          { category: { $regex: new RegExp(`^${sport} shoes$`, 'i') } }
-        ]
+          { sport: { $regex: new RegExp(`^${safeSport}$`, 'i') } },
+          { category: { $regex: new RegExp(`^${safeSport} shoes$`, 'i') } }
+        ];
       }
     }
     if (department) {
@@ -61,6 +72,7 @@ router.get('/', async (req, res) => {
     const products = await Product.find(filter)
     res.json(products)
   } catch (error) {
+    console.error('Fetch products error:', error)
     res.status(500).json({ message: 'Failed to fetch products' })
   }
 })
@@ -70,6 +82,13 @@ router.get('/', async (req, res) => {
 router.get('/search', async (req, res) => {
   try {
     const { q, page = 1, limit = 20 } = req.query;
+    if (q !== undefined && typeof q !== 'string') {
+      return res.status(400).json({ message: 'Invalid search parameter format' });
+    }
+    if (typeof q === 'string' && q.length > 100) {
+      return res.status(400).json({ message: 'Search query too long' });
+    }
+    
     if (!q || q.trim() === '') {
       return res.status(200).json({
         products: [],
@@ -79,8 +98,8 @@ router.get('/search', async (req, res) => {
       });
     }
 
-    // Escape regex characters from user input
-    const sanitizedQuery = q.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const sanitizedQuery = escapeRegex(q);
     const regex = new RegExp(sanitizedQuery, 'i');
 
     const filter = {
@@ -93,8 +112,13 @@ router.get('/search', async (req, res) => {
       ]
     };
 
-    const pageNum = parseInt(page, 10) || 1;
-    const limitNum = parseInt(limit, 10) || 20;
+    let pageNum = parseInt(page, 10) || 1;
+    if (pageNum < 1) pageNum = 1;
+    
+    let limitNum = parseInt(limit, 10) || 20;
+    if (limitNum < 1) limitNum = 1;
+    if (limitNum > 50) limitNum = 50;
+    
     const skip = (pageNum - 1) * limitNum;
 
     const [products, totalProducts] = await Promise.all([
@@ -109,6 +133,7 @@ router.get('/search', async (req, res) => {
       totalProducts
     });
   } catch (error) {
+    console.error('Search products error:', error)
     res.status(500).json({ message: 'Search failed' });
   }
 });
@@ -117,12 +142,17 @@ router.get('/search', async (req, res) => {
 // GET /api/products/:id — single product detail
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
+    const { id } = req.params;
+    if (typeof id !== 'string' || !mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid product ID format' });
+    }
+    const product = await Product.findById(id)
     if (!product) {
       return res.status(404).json({ message: 'Product not found' })
     }
     res.json(product)
   } catch (error) {
+    console.error('Fetch product detail error:', error)
     res.status(500).json({ message: 'Failed to fetch product' })
   }
 })

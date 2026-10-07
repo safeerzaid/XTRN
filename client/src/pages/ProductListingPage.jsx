@@ -8,6 +8,7 @@ import ProductCategoryNav from "../components/ui/ProductCategoryNav";
 import ProductListCard from "../components/ui/ProductListCard";
 import FilterSection from "../components/ui/FilterSection";
 import FeaturedSidebar from "../components/ui/FeaturedSidebar";
+import GenderSidebar from "../components/ui/GenderSidebar";
 import { useFeaturedFilters } from "../hooks/useFeaturedFilters";
 
 /**
@@ -48,6 +49,18 @@ function ProductListingPage({ pageType = "sport" }) {
   });
   const [featuredFilters, setFeaturedFilters] = useState(makeFeaturedInit);
 
+  // ── Gender-page filter state ────
+  const makeGenderInit = () => ({
+    sections: new Set(),
+    sports: new Set(),
+    categories: new Set(),
+    sizes: new Set(),
+    brands: new Set(),
+    priceRanges: new Set(),
+    sortBy: 'default',
+  });
+  const [genderFilters, setGenderFilters] = useState(makeGenderInit());
+
   // ── Mobile filter UI state ────────────────────────────────────────────────
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [priceOpen, setPriceOpen]   = useState(false);
@@ -85,17 +98,15 @@ function ProductListingPage({ pageType = "sport" }) {
         setLoading(true);
         setError("");
         setSelectedGenders(new Set());
-        console.log("[ProductListingPage] Fetching products from:", url);
 
         const response = await api.get(url)
         const data = response.data;
 
-
-        console.log("[ProductListingPage] Loaded", data.length, "products");
         setProducts(data);
         setSortBy("default");
         setSelectedSizes(new Set());
         setFeaturedFilters(makeFeaturedInit());
+        setGenderFilters(makeGenderInit());
       } catch (err) {
         console.error("[ProductListingPage] Error fetching products from", url, err);
         setError("Failed to load products. Please check your connection.");
@@ -133,6 +144,7 @@ function ProductListingPage({ pageType = "sport" }) {
     setSelectedSizes(new Set());
     setSortBy("default");
     setFeaturedFilters(makeFeaturedInit());
+    setGenderFilters(makeGenderInit());
   };
 
   // ── Featured-page filtering (hook called unconditionally — Rules of Hooks) ─
@@ -152,19 +164,62 @@ function ProductListingPage({ pageType = "sport" }) {
     return 0;
   });
 
-  // Use the right result based on pageType
-  const sortedProducts = pageType === "featured" ? featuredFiltered : regularSorted;
+  // ── Gender-page filtering ──────────────────────────────────────────────────
+  const checkParams = new URLSearchParams(location.search);
+  checkParams.delete("department");
+  checkParams.delete("featuredCategory");
+  checkParams.delete("filterBy");
+  const hasExtraQueryParams = Array.from(checkParams.keys()).length > 0;
+  const isGenderOnlyPage = isGenderFixed && !sport && !category && !subcategory && !hasExtraQueryParams;
 
-  const hasActiveFilters = pageType === "featured"
-    ? featuredFilters.genders.size > 0 || featuredFilters.types.size > 0 ||
-      featuredFilters.brands.size > 0 || featuredFilters.sizes.size > 0 ||
-      featuredFilters.sortBy !== 'default'
-    : selectedSizes.size > 0 || selectedGenders.size > 0 || sortBy !== "default";
-  const activeFilterCount = (sortBy !== "default" ? 1 : 0); // size and gender have their own buttons
+  let genderFiltered = products;
+  if (isGenderOnlyPage) {
+    if (genderFilters.sections.size > 0) genderFiltered = genderFiltered.filter(p => genderFilters.sections.has(p.section));
+    if (genderFilters.sports.size > 0) genderFiltered = genderFiltered.filter(p => genderFilters.sports.has(p.sport));
+    if (genderFilters.categories.size > 0) genderFiltered = genderFiltered.filter(p => genderFilters.categories.has(p.category));
+    if (genderFilters.brands.size > 0) genderFiltered = genderFiltered.filter(p => genderFilters.brands.has(p.brand));
+    if (genderFilters.sizes.size > 0) genderFiltered = genderFiltered.filter(p => (p.sizes || []).some(s => genderFilters.sizes.has(s)));
+    if (genderFilters.priceRanges.size > 0) {
+      genderFiltered = genderFiltered.filter(p => {
+        if (genderFilters.priceRanges.has('under-1000') && p.price < 1000) return true;
+        if (genderFilters.priceRanges.has('1000-2000') && p.price >= 1000 && p.price <= 2000) return true;
+        if (genderFilters.priceRanges.has('2000-5000') && p.price > 2000 && p.price <= 5000) return true;
+        if (genderFilters.priceRanges.has('over-5000') && p.price > 5000) return true;
+        return false;
+      });
+    }
+    genderFiltered = [...genderFiltered].sort((a, b) => {
+      if (genderFilters.sortBy === 'price-asc') return a.price - b.price;
+      if (genderFilters.sortBy === 'price-desc') return b.price - a.price;
+      if (genderFilters.sortBy === 'newest') {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return db - da;
+      }
+      return 0;
+    });
+  }
+
+  // Use the right result based on pageType
+  const sortedProducts = pageType === "featured" 
+    ? featuredFiltered 
+    : isGenderOnlyPage
+      ? genderFiltered
+      : regularSorted;
+
+  const genderActiveCount = genderFilters.sections.size + genderFilters.sports.size + genderFilters.categories.size + genderFilters.sizes.size + genderFilters.brands.size + genderFilters.priceRanges.size + (genderFilters.sortBy !== 'default' ? 1 : 0);
+
   const featuredActiveCount =
     featuredFilters.genders.size + featuredFilters.types.size +
     featuredFilters.brands.size + featuredFilters.sizes.size +
     (featuredFilters.sortBy !== 'default' ? 1 : 0);
+
+  const hasActiveFilters = pageType === "featured"
+    ? featuredActiveCount > 0
+    : isGenderOnlyPage
+      ? genderActiveCount > 0
+      : selectedSizes.size > 0 || selectedGenders.size > 0 || sortBy !== "default";
+
   let heading = pageType;
   if (pageType === "sport") {
     heading = sport;
@@ -207,6 +262,16 @@ function ProductListingPage({ pageType = "sport" }) {
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <ProductListingHeader products={sortedProducts} heading={heading} />
 
+      <div className="lg:hidden px-4 sm:px-6 md:px-10 flex justify-end mb-4">
+        <button 
+          onClick={() => setDrawerOpen(true)}
+          className="flex items-center gap-2 rounded-full border border-gray-300 px-4 py-2 font-nav text-[14px] font-medium text-gray-700 hover:bg-gray-50"
+        >
+          <FiSliders size={16} />
+          Filters
+        </button>
+      </div>
+
 
 
 
@@ -235,7 +300,7 @@ function ProductListingPage({ pageType = "sport" }) {
         </div>
         {pageType === "featured" ? (
           /* Featured: render the full dynamic sidebar inside the drawer */
-          <div className="overflow-y-auto max-h-[60vh]">
+          <div className="overflow-y-auto max-h-[60vh] custom-scrollbar" data-lenis-prevent>
             <FeaturedSidebar
               products={products}
               featuredCategory={subcategory}
@@ -243,9 +308,17 @@ function ProductListingPage({ pageType = "sport" }) {
               onFiltersChange={setFeaturedFilters}
             />
           </div>
+        ) : isGenderOnlyPage ? (
+          <div className="overflow-y-auto max-h-[60vh] custom-scrollbar" data-lenis-prevent>
+            <GenderSidebar
+              products={products}
+              filters={genderFilters}
+              onFiltersChange={setGenderFilters}
+            />
+          </div>
         ) : (
           /* Standard pages: category + price + size drawer */
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-y-auto max-h-[60vh] custom-scrollbar" data-lenis-prevent>
             {pageType !== 'accessories' && !isGenderFixed && genderOptions.length > 0 && (
               <FilterSection title="Gender" activeCount={selectedGenders.size}>
                 <div className="space-y-2">
@@ -321,7 +394,10 @@ function ProductListingPage({ pageType = "sport" }) {
       <div className="flex items-start">
 
         {/* ── Desktop sidebar (lg+ only) ──────────────────────────────── */}
-        <aside className="hidden w-64 shrink-0 bg-white px-6 py-8 lg:block sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto">
+        <aside 
+          className="hidden w-64 shrink-0 bg-white px-6 py-8 lg:block sticky top-20 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar"
+          data-lenis-prevent
+        >
           {pageType === "featured" ? (
             /* Featured: fully dynamic sidebar */
             <FeaturedSidebar
@@ -329,6 +405,12 @@ function ProductListingPage({ pageType = "sport" }) {
               featuredCategory={subcategory}
               filters={featuredFilters}
               onFiltersChange={setFeaturedFilters}
+            />
+          ) : isGenderOnlyPage ? (
+            <GenderSidebar
+              products={products}
+              filters={genderFilters}
+              onFiltersChange={setGenderFilters}
             />
           ) : (
             /* Standard pages: Category + Price + Size only */
@@ -397,33 +479,33 @@ function ProductListingPage({ pageType = "sport" }) {
           )}
         </aside>
 
-        {/* ── Product grid ─────────────────────────────────────────────── */}
-        {/* 2-col on mobile/tablet, 3-col on desktop */}
-        <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-8 px-3 py-6 sm:gap-x-4 sm:gap-y-10 sm:px-4 md:px-6 lg:grid-cols-3 lg:gap-x-4 lg:px-10 lg:py-8">
-          {sortedProducts.map((product) => (
-            <ProductListCard
-              key={product._id}
-              product={product}
-              pageType={pageType}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Empty state */}
-      {sortedProducts.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <p className="font-nav text-gray-500">No products match your filters.</p>
-          {hasActiveFilters && (
-            <button
-              onClick={clearAllFilters}
-              className="font-nav text-[13px] font-medium text-gray-900 underline underline-offset-2"
-            >
-              Clear all filters
-            </button>
+        {/* ── Product grid or Empty state ─────────────────────────────────────────────── */}
+        <div className="flex-1">
+          {sortedProducts.length === 0 && !loading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <p className="font-nav text-gray-500">No products match your filters.</p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="font-nav text-[13px] font-medium text-gray-900 underline underline-offset-2"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-8 px-3 py-6 sm:gap-x-4 sm:gap-y-10 sm:px-4 md:px-6 lg:grid-cols-3 lg:gap-x-4 lg:px-10 lg:py-8">
+              {sortedProducts.map((product) => (
+                <ProductListCard
+                  key={product._id}
+                  product={product}
+                  pageType={pageType}
+                />
+              ))}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Footer */}
     </div>

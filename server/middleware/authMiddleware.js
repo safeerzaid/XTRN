@@ -15,6 +15,7 @@ const authmiddleWare = (req,res,next) => {
     req.user = decoded
     next()
   }catch(error){
+    console.error('Auth middleware error:', error)
     return res.status(401).json({
       message: 'invalid or expired token'
     })
