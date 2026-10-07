@@ -18,10 +18,10 @@ function Footer() {
             </h4>
             <ul className="space-y-3.5 text-[14px] md:text-[15px] text-white font-light">
               <li>
-                <span className="hover:underline cursor-pointer transition-all">Who We Are</span>
+                <Link to="/who-we-are" className="hover:underline cursor-pointer transition-all">Who We Are</Link>
               </li>
               <li>
-                <span className="hover:underline cursor-pointer transition-all">Become an XTRN Member</span>
+                <Link to="/become-member" className="hover:underline cursor-pointer transition-all">Become an XTRN Member</Link>
               </li>
             </ul>
           </div>

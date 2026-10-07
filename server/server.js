@@ -14,6 +14,7 @@ import cartRoutes from "./routes/CartRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import memberRoutes from "./routes/memberRoutes.js";
 import { startCancelStaleOrdersJob } from "./jobs/cancelStaleOrders.js";
 
 if (process.env.NODE_ENV === 'production') {
@@ -81,6 +82,7 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/members", memberRoutes);
 
 app.use('/api', (req, res) => {
   res.status(404).json({ message: 'API route not found' });

@@ -11,6 +11,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 import SearchResultsPage from './pages/SearchResultsPage';
+import WhoWeAre from './pages/WhoWeAre';
+import BecomeMember from './pages/BecomeMember';
 import { useEffect } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
@@ -86,6 +88,12 @@ function App() {
 
           {/* Community */}
           <Route path='/community' element={<CommunityPage />} />
+
+          {/* Who We Are */}
+          <Route path='/who-we-are' element={<WhoWeAre />} />
+          
+          {/* Become a Member */}
+          <Route path='/become-member' element={<BecomeMember />} />
 
           {/* Sports — /products/:sport (e.g. /products/football) */}
           <Route path='/products/:sport' element={<ProductListingPage pageType="sport" />} />
