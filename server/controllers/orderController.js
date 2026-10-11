@@ -3,7 +3,7 @@ import Order from '../models/Order.js'
 import Cart from '../models/Cart.js'
 import User from '../models/User.js'
 import Product from '../models/Product.js'
-import { createOrderSchema } from '../validators/orderValidator.js'
+import { createOrderSchema } from '../validators/OrderValidator.js'
 import razorpay from '../config/razorpay.js'
 import crypto from 'crypto'
 import { sendOrderConfirmationEmail } from '../utils/orderEmail.js'
@@ -328,4 +328,4 @@ export const trackOrder = async (req, res) => {
     console.error('trackOrder error:', error);
     return res.status(500).json({ message: 'Server error', error: error.message, stack: error.stack });
   }
-}
+}

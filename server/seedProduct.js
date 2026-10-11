@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import fs from 'fs'
 import csv from 'csv-parser'
-import Product from './models/product.js'
+import Product from './models/Product.js'
 
 dotenv.config()
 
