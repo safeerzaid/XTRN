@@ -1,13 +1,35 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI)
-    console.log('DataBase is connected');
-  } catch (error) {
-    console.error('MongoDB connection failed: ', error.message)
-    process.exit(1)
-  }
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
 }
 
-export default connectDB
+const connectDB = async () => {
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(process.env.MONGO_URI).then((mongooseInstance) => {
+      console.log('DataBase is connected');
+      return mongooseInstance;
+    });
+  }
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (error) {
+    cached.promise = null;
+    console.error('MongoDB connection failed: ', error.message);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
+    throw error;
+  }
+
+  return cached.conn;
+};
+
+export default connectDB;
