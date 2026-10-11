@@ -18,6 +18,7 @@ import {
 import gsap from "gsap";
 
 import logo from "../../assets/images/logo/logo.png";
+import SearchPanel from './SearchPanel';
 import Login from "../Login";
 import Signup from "../Signup";
 import { useAuth } from "../../context/authContext";
@@ -26,7 +27,7 @@ import { clearAccessTokenStore } from "../../api/tokenStore";
 import useCartStore from "../../store/cartStore";
 
 const Navbar = ({ alwaysVisible = false }) => {
-  const navItems = ["MEN", "WOMEN", "ACCESSORIES", "SALE"];
+  const navItems = ["MEN", "WOMEN", "ACCESSORIES"];
   const navigate = useNavigate();
   const location = useLocation();
   const { accessToken, setAccessToken, user, logout } = useAuth();
@@ -38,6 +39,7 @@ const Navbar = ({ alwaysVisible = false }) => {
   const [active, setActive] = useState(null);
   const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [menuPath, setMenuPath] = useState([]);
   
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -794,7 +796,8 @@ const Navbar = ({ alwaysVisible = false }) => {
               >
                 Logout
               </button>
-            </>
+              
+    </>
           ) : (
             <>
               <button
@@ -891,7 +894,7 @@ const Navbar = ({ alwaysVisible = false }) => {
             <button
               type="button"
               aria-label={mobileSearchOpen ? "Close search" : "Search"}
-              onClick={mobileSearchOpen ? closeMobileSearch : openMobileSearch}
+              onClick={() => setIsSearchOpen(true)}
               className="flex items-center justify-center p-2 text-black outline-none"
               style={{
                 WebkitTapHighlightColor: "transparent",
@@ -899,11 +902,7 @@ const Navbar = ({ alwaysVisible = false }) => {
                 touchAction: "manipulation",
               }}
             >
-              {mobileSearchOpen ? (
-                <FiX size={21} strokeWidth={1.7} />
-              ) : (
-                <FiSearch size={21} strokeWidth={1.7} />
-              )}
+              <FiSearch size={21} strokeWidth={1.7} />
             </button>
 
 
@@ -998,14 +997,10 @@ const Navbar = ({ alwaysVisible = false }) => {
             <button
               type="button"
               aria-label={tabletSearchOpen ? "Close search" : "Search"}
-              onClick={tabletSearchOpen ? closeTabletSearch : openTabletSearch}
+              onClick={() => setIsSearchOpen(true)}
               className="transition-all duration-300 hover:scale-110 cursor-pointer"
             >
-              {tabletSearchOpen ? (
-                <FiX size={19} />
-              ) : (
-                <FiSearch size={19} />
-              )}
+              <FiSearch size={19} />
             </button>
 
 
@@ -1107,11 +1102,11 @@ const Navbar = ({ alwaysVisible = false }) => {
               ref={(el) => { desktopIconRefs.current[0] = el; }}
               type="button"
               aria-label={desktopSearchOpen ? "Close search" : "Search"}
-              onClick={desktopSearchOpen ? closeDesktopSearch : openDesktopSearch}
+              onClick={() => setIsSearchOpen(true)}
               className="transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >
-              {desktopSearchOpen ? <FiX size={20} /> : <FiSearch size={20} />}
+              <FiSearch size={20} />
             </button>
 
             {/* ── Account icon — unauthenticated: opens login modal
@@ -1276,11 +1271,11 @@ const Navbar = ({ alwaysVisible = false }) => {
               ref={(el) => { desktop4kIconRefs.current[0] = el; }}
               type="button"
               aria-label={desktopSearchOpen ? "Close search" : "Search"}
-              onClick={desktopSearchOpen ? closeDesktopSearch : openDesktopSearch}
+              onClick={() => setIsSearchOpen(true)}
               className="transition-all duration-300 hover:scale-110 cursor-pointer"
               style={{ color: "#ffffff" }}
             >
-              {desktopSearchOpen ? <FiX size={22} /> : <FiSearch size={22} />}
+              <FiSearch size={22} />
             </button>
 
             {/* ── Account icon (4K) — same logic as standard desktop ── */}
@@ -1401,6 +1396,7 @@ const Navbar = ({ alwaysVisible = false }) => {
           onLoginClick={() => { setSignupOpen(false); setLoginOpen(true); }} 
         />
       )}
+      <SearchPanel isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 };

@@ -33,16 +33,13 @@ function Footer() {
             </h4>
             <ul className="space-y-3.5 text-[14px] md:text-[15px] text-white font-light">
               <li>
-                <span className="hover:underline cursor-pointer transition-all">Size Guide</span>
+                <Link to="/size-guide" className="hover:underline cursor-pointer transition-all">Size Guide</Link>
               </li>
               <li>
-                <span className="hover:underline cursor-pointer transition-all">Order Tracking</span>
+                <Link to="/order-tracking" className="hover:underline cursor-pointer transition-all">Order Tracking</Link>
               </li>
               <li>
-                <span className="hover:underline cursor-pointer transition-all">FAQ</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Contact</span>
+                <Link to="/contact" className="hover:underline cursor-pointer transition-all">Contact</Link>
               </li>
             </ul>
           </div>
@@ -54,31 +51,16 @@ function Footer() {
             </h4>
             <ul className="space-y-3.5 text-[14px] md:text-[15px] text-white font-light">
               <li>
-                <span className="hover:underline cursor-pointer transition-all">Terms & Conditions</span>
+                <Link to="/terms-and-conditions" className="hover:underline cursor-pointer transition-all">Terms & Conditions</Link>
+              </li>
+
+
+
+              <li>
+                <Link to="/privacy-policy" className="hover:underline cursor-pointer transition-all">Privacy</Link>
               </li>
               <li>
-                <span className="hover:underline cursor-pointer transition-all">XTRN - Terms & Conditions</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Cookie Preferences</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Cookie Policy</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Privacy</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Accessibility</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Declaration of conformity</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Product Recall</span>
-              </li>
-              <li>
-                <span className="hover:underline cursor-pointer transition-all">Customer Reviews</span>
+                <Link to="/accessibility" className="hover:underline cursor-pointer transition-all">Accessibility</Link>
               </li>
             </ul>
           </div>
@@ -90,7 +72,7 @@ function Footer() {
             </h4>
             <ul className="space-y-3.5 text-[14px] md:text-[15px] text-white font-light">
               <li>
-                <span className="hover:underline cursor-pointer transition-all">Our Responsible Commitments</span>
+                <Link to="/our-responsibility" className="hover:underline cursor-pointer transition-all">Our Responsible Commitments</Link>
               </li>
             </ul>
           </div>

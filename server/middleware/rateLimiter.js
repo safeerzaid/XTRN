@@ -59,6 +59,17 @@ export const looseLimiter = rateLimit({
   legacyHeaders: false,  
 })
 
+export const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  skip: skipIfNonProd,
+  message: {
+    message: 'Too many messages. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
 export const otpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,

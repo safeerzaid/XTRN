@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import api from '../api/axios';
+import communityHeroImage from '../assets/images/covers/community 2.PNG';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -10,7 +11,7 @@ const CONTENT = {
   hero: {
     heading: "Become an XTRN Member",
     tagline: "Join the community that backs athletes at every level.",
-    videoUrl: "https://res.cloudinary.com/duvfdxql9/video/upload/v1785950028/heroo_vrbp20.mp4"
+    imageUrl: communityHeroImage
   },
   whyJoin: [
     { title: "Join the Community", text: "Train, learn, and grow with athletes who share your drive. Whether you are lacing up for your first run or chasing a personal best, you will find people who understand the effort. Share your journey, learn from others, and keep each other moving." },
@@ -124,9 +125,11 @@ function BecomeMember() {
       {/* 1. HERO SECTION */}
       <section className="relative w-full h-[80vh] mt-[72px] md:h-[80vh] md:mt-0">
         <div className="relative h-full w-full overflow-hidden">
-          <video autoPlay loop muted playsInline preload="auto" className="absolute inset-0 h-full w-full object-cover">
-            <source src={CONTENT.hero.videoUrl} type="video/mp4" />
-          </video>
+          <img
+            src={CONTENT.hero.imageUrl}
+            alt="Become an XTRN Member"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
           <div className="absolute inset-0 bg-black/50" />
           
           <div className="absolute inset-0 z-10 text-white font-nav flex flex-col justify-center items-center text-center px-4">

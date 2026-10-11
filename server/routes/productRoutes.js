@@ -4,6 +4,7 @@ import Product from '../models/Product.js'
 import User from '../models/User.js'
 import authMiddleware from '../middleware/authMiddleware.js'
 import adminMiddleware from '../middleware/adminMiddleware.js'
+import { looseLimiter } from '../middleware/rateLimiter.js'
 import { createProduct, updateProduct, deleteProduct } from '../controllers/productController.js'
 const router = express.Router()
 
@@ -78,6 +79,29 @@ router.get('/', async (req, res) => {
 })
 
 
+const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+function buildWordStartFilter(term) {
+  const words = term.trim().split(/\s+/).filter(w => w.length > 0);
+  if (words.length === 0) return null;
+  
+  const wordConditions = words.map(word => {
+    const escaped = escapeRegex(word);
+    const regex = new RegExp('(^|[\\s\\-_/\\\\.,()&\'])' + escaped, 'i');
+    return {
+      $or: [
+        { name: regex },
+        { description: regex },
+        { brand: regex },
+        { category: regex },
+        { sport: regex }
+      ]
+    };
+  });
+  
+  return { $and: wordConditions };
+}
+
 // GET /api/products/search
 router.get('/search', async (req, res) => {
   try {
@@ -98,19 +122,7 @@ router.get('/search', async (req, res) => {
       });
     }
 
-    const escapeRegex = (string) => string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const sanitizedQuery = escapeRegex(q);
-    const regex = new RegExp(sanitizedQuery, 'i');
-
-    const filter = {
-      $or: [
-        { name: regex },
-        { description: regex },
-        { brand: regex },
-        { category: regex },
-        { sport: regex }
-      ]
-    };
+    const filter = buildWordStartFilter(q) || {};
 
     let pageNum = parseInt(page, 10) || 1;
     if (pageNum < 1) pageNum = 1;
@@ -135,6 +147,60 @@ router.get('/search', async (req, res) => {
   } catch (error) {
     console.error('Search products error:', error)
     res.status(500).json({ message: 'Search failed' });
+  }
+});
+
+
+// GET /api/products/suggestions
+router.get('/suggestions', looseLimiter, async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || typeof q !== 'string') {
+      return res.status(200).json({ suggestions: [], total: 0 });
+    }
+    
+    const term = q.trim();
+    if (term.length < 1 || term.length > 50) {
+      return res.status(200).json({ suggestions: [], total: 0 });
+    }
+
+    const filter = buildWordStartFilter(term) || {};
+
+    const products = await Product.find(filter).select('name category _id').lean().limit(30).exec();
+    const total = await Product.countDocuments(filter).exec();
+
+    const words = term.trim().split(/\s+/).filter(w => w.length > 0);
+    const firstWordRegex = new RegExp('^' + escapeRegex(words[0]), 'i');
+    
+    const uniqueSuggestions = [];
+    const seenNames = new Set();
+    for (const p of products) {
+      if (!seenNames.has(p.name)) {
+        seenNames.add(p.name);
+        uniqueSuggestions.push({
+          text: p.name,
+          _id: p._id,
+          category: p.category
+        });
+      }
+    }
+
+    uniqueSuggestions.sort((a, b) => {
+      const aStarts = firstWordRegex.test(a.text);
+      const bStarts = firstWordRegex.test(b.text);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return a.text.localeCompare(b.text);
+    });
+
+    res.status(200).json({
+      suggestions: uniqueSuggestions.slice(0, 6),
+      total
+    });
+  } catch (error) {
+    console.error('Fetch suggestions error:', error);
+    res.status(500).json({ message: 'Failed to fetch suggestions' });
   }
 });
 

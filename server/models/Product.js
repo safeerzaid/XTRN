@@ -100,6 +100,18 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+
+  countryOfOrigin: { type: String, trim: true },
+  manufacturerName: { type: String, trim: true },
+  manufacturerAddress: { type: String, trim: true },
+  packerOrImporter: { type: String, trim: true },
+  netQuantity: { type: String, trim: true },
+  manufactureMonthYear: { 
+    type: String, 
+    trim: true,
+    match: [/^(0[1-9]|1[0-2])\/\d{4}$/, 'Invalid format. Must be MM/YYYY']
+  },
+  mrp: { type: Number, min: 0 },
 },
   {
     timestamps: true

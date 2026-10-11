@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { FaStar, FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
 import ProductListCard from "../components/ui/ProductListCard";
@@ -185,9 +185,68 @@ function ProductDetailPage() {
               <p className="mt-1 text-sm lg:text-base text-gray-500 leading-7 font-nav">{product.description}</p>
             </div>
 
-          <div className="flex flex-wrap gap-2 mt-4">
+          {/* Legal and Product Details Block */}
+          {(product.mrp != null || product.countryOfOrigin || product.manufacturerName || product.manufacturerAddress || product.packerOrImporter || product.netQuantity || product.manufactureMonthYear) && (
+            <div className="mt-6 bg-gray-50 p-5 rounded-2xl border border-gray-100 font-nav">
+              <h3 className="text-base font-semibold text-gray-900 mb-4">Product Details</h3>
+              <div className="flex flex-col gap-3">
+                {product.mrp != null && (
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                    <span className="text-sm font-semibold text-gray-800 sm:w-1/3 shrink-0">MRP (inclusive of all taxes)</span>
+                    <span className="text-sm text-gray-600">{formatPrice(product.mrp)}</span>
+                  </div>
+                )}
+                {product.countryOfOrigin && (
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                    <span className="text-sm font-semibold text-gray-800 sm:w-1/3 shrink-0">Country of origin</span>
+                    <span className="text-sm text-gray-600">{product.countryOfOrigin}</span>
+                  </div>
+                )}
+                {(product.manufacturerName || product.manufacturerAddress) && (
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                    <span className="text-sm font-semibold text-gray-800 sm:w-1/3 shrink-0">Manufactured by</span>
+                    <span className="text-sm text-gray-600 whitespace-pre-line">
+                      {[product.manufacturerName, product.manufacturerAddress].filter(Boolean).join('\n')}
+                    </span>
+                  </div>
+                )}
+                {product.packerOrImporter && (
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                    <span className="text-sm font-semibold text-gray-800 sm:w-1/3 shrink-0">Packed or imported by</span>
+                    <span className="text-sm text-gray-600">{product.packerOrImporter}</span>
+                  </div>
+                )}
+                {product.netQuantity && (
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                    <span className="text-sm font-semibold text-gray-800 sm:w-1/3 shrink-0">Net quantity</span>
+                    <span className="text-sm text-gray-600">{product.netQuantity}</span>
+                  </div>
+                )}
+                {product.manufactureMonthYear && (
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                    <span className="text-sm font-semibold text-gray-800 sm:w-1/3 shrink-0">Month and year of manufacture</span>
+                    <span className="text-sm text-gray-600">{product.manufactureMonthYear}</span>
+                  </div>
+                )}
+                <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-4">
+                  <span className="text-sm font-semibold text-gray-800 sm:w-1/3 shrink-0">Customer care</span>
+                  <span className="text-sm text-gray-600">
+                    <a href="mailto:support@xtrn.com" className="text-black font-medium border-b border-black hover:text-gray-500 hover:border-gray-500 transition-colors">support@xtrn.com</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {product.sizes && product.sizes.length > 1 && (
-            <div className="flex flex-wrap gap-2 mt-4">
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-nav text-sm font-semibold text-gray-900">Select Size</span>
+                <Link to="/size-guide" className="font-nav text-sm text-gray-500 hover:text-black underline">
+                  Size Guide
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-2">
               {product.sizes.map((size) => (
                 <button
                   key={size}
@@ -204,8 +263,8 @@ function ProductDetailPage() {
                 </button>
               ))}
             </div>
+              </div>
           )}
-          </div>
 
           {sizeError && (
             <p className="text-red-500 text-sm mt-2 font-nav">Please select a size</p>

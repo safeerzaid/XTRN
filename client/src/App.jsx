@@ -13,6 +13,13 @@ import VerifyEmail from './pages/VerifyEmail';
 import SearchResultsPage from './pages/SearchResultsPage';
 import WhoWeAre from './pages/WhoWeAre';
 import BecomeMember from './pages/BecomeMember';
+import OrderTracking from './pages/OrderTracking';
+import SizeGuide from './pages/SizeGuide';
+import Contact from './pages/Contact';
+import TermsAndConditions from './pages/TermsAndConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Accessibility from './pages/Accessibility';
+import Responsibility from './pages/Responsibility';
 import { useEffect } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
@@ -94,6 +101,27 @@ function App() {
           
           {/* Become a Member */}
           <Route path='/become-member' element={<BecomeMember />} />
+
+          {/* Contact */}
+          <Route path='/contact' element={<Contact />} />
+
+          {/* Terms and Conditions */}
+          <Route path='/terms-and-conditions' element={<TermsAndConditions />} />
+
+          {/* Privacy Policy */}
+          <Route path='/privacy-policy' element={<PrivacyPolicy />} />
+
+          {/* Accessibility */}
+          <Route path='/accessibility' element={<Accessibility />} />
+
+          {/* Our Responsibility */}
+          <Route path='/our-responsibility' element={<Responsibility />} />
+
+          {/* Order Tracking */}
+          <Route path='/order-tracking' element={<OrderTracking />} />
+
+          {/* Size Guide */}
+          <Route path='/size-guide' element={<SizeGuide />} />
 
           {/* Sports — /products/:sport (e.g. /products/football) */}
           <Route path='/products/:sport' element={<ProductListingPage pageType="sport" />} />

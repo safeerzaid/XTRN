@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, replyTo }) => {
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
@@ -38,7 +38,7 @@ const sendEmail = async ({ to, subject, html }) => {
   try {
     const info = await transporter.sendMail({
       from: fromAddress,
-      replyTo: 'support@xtrnstore.com',
+      replyTo: replyTo || 'support@xtrnstore.com',
       to,
       subject,
       text: textVersion,

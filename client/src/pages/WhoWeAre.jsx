@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import heroImage from '../assets/images/covers/IMG_5887.PNG';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -9,7 +10,7 @@ const CONTENT = {
   hero: {
     heading: "WHO WE ARE",
     tagline: "GEAR UP. FOR GREATNESS.",
-    videoUrl: "https://res.cloudinary.com/duvfdxql9/video/upload/v1785950028/heroo_vrbp20.mp4"
+    imageUrl: heroImage
   },
   story: [
     "XTRN began with a simple frustration. Athletes across India were training hard in gear that was built for looks, not for the grind. We believed Indian athletes deserved performance wear made for our heat, our streets, and our hunger to win.",
@@ -85,12 +86,11 @@ function WhoWeAre() {
       {/* 1. HERO SECTION */}
       <section className="relative w-full h-[80vh] mt-[72px] md:h-[80vh] md:mt-0">
         <div className="relative h-full w-full overflow-hidden">
-          <video
-            autoPlay loop muted playsInline preload="auto"
+          <img
+            src={CONTENT.hero.imageUrl}
+            alt="Hero Background"
             className="absolute inset-0 h-full w-full object-cover"
-          >
-            <source src={CONTENT.hero.videoUrl} type="video/mp4" />
-          </video>
+          />
           <div className="absolute inset-0 bg-black/40" />
           
           <div className="absolute inset-0 z-10 text-white font-nav flex flex-col justify-center items-center text-center px-4">

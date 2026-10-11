@@ -1,7 +1,7 @@
 import express from 'express'
 import authMiddleware from '../middleware/authMiddleware.js'
 import adminMiddleware from '../middleware/adminMiddleware.js'
-import { createOrder, getOrders, getOrderById, getAllOrders, updateOrderStatus, verifyPayment } from '../controllers/orderController.js'
+import { createOrder, getOrders, getOrderById, getAllOrders, updateOrderStatus, verifyPayment, trackOrder } from '../controllers/orderController.js'
 import { looseLimiter } from '../middleware/rateLimiter.js'
 
 const router = express.Router()
@@ -13,6 +13,8 @@ router.post('/verify-payment', looseLimiter, authMiddleware, verifyPayment)
 
 router.get('/admin/all', authMiddleware, adminMiddleware, getAllOrders)
 router.patch('/admin/:id/status', authMiddleware, adminMiddleware, updateOrderStatus)
+
+router.post('/track', looseLimiter, trackOrder)
 
 router.get('/:id', authMiddleware, getOrderById)
 

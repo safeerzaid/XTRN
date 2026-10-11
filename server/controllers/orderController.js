@@ -7,6 +7,7 @@ import { createOrderSchema } from '../validators/orderValidator.js'
 import razorpay from '../config/razorpay.js'
 import crypto from 'crypto'
 import { sendOrderConfirmationEmail } from '../utils/orderEmail.js'
+import { z } from 'zod'
 
 export const createOrder = async (req, res) => {
   const decremented = [] // { productId, quantity } — rollback-inu vendi track cheyyunnu
@@ -279,3 +280,52 @@ export const verifyPayment = async (req, res) => {
     return res.status(500).json({ message: 'Server error' })
   }
 }
+
+export const trackOrder = async (req, res) => {
+  try {
+    const trackSchema = z.object({
+      orderId: z.string().refine((val) => mongoose.Types.ObjectId.isValid(val), {
+        message: "Invalid Order ID format",
+      }),
+      email: z.string().trim().toLowerCase().email()
+    });
+
+    const parsed = trackSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(404).json({ message: "We couldn't find an order with those details." });
+    }
+
+    const { orderId, email } = parsed.data;
+
+    const order = await Order.findById(orderId).populate('user', 'email');
+    
+    if (!order || !order.user || order.user.email.toLowerCase() !== email) {
+      return res.status(404).json({ message: "We couldn't find an order with those details." });
+    }
+
+    const safeOrder = {
+      _id: order._id,
+      createdAt: order.createdAt,
+      status: order.status,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      totalAmount: order.totalAmount,
+      items: order.items.map(item => ({
+        name: item.name,
+        size: item.size,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      shippingAddress: {
+        city: order.shippingAddress?.city || '',
+        state: order.shippingAddress?.state || '',
+        pincode: order.shippingAddress?.pincode || ''
+      }
+    };
+
+    return res.status(200).json(safeOrder);
+  } catch (error) {
+    console.error('trackOrder error:', error);
+    return res.status(500).json({ message: 'Server error', error: error.message, stack: error.stack });
+  }
+}

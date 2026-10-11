@@ -27,5 +27,16 @@ export const productSchema = z.object({
     return Number(val);
   }, z.number().min(0).max(100).nullable().optional()),
   rating: z.number().min(0).max(5).optional(),
-  featured: z.boolean().optional()
+  featured: z.boolean().optional(),
+  countryOfOrigin: z.string().trim().max(100).optional(),
+  manufacturerName: z.string().trim().max(100).optional(),
+  manufacturerAddress: z.string().trim().max(300).optional(),
+  packerOrImporter: z.string().trim().max(300).optional(),
+  netQuantity: z.string().trim().max(100).optional(),
+  manufactureMonthYear: z.string().trim().regex(/^(0[1-9]|1[0-2])\/\d{4}$/, "Must be MM/YYYY").optional().or(z.literal('')),
+  mrp: z.preprocess((val) => {
+    if (val === '' || val === null) return null;
+    if (val === undefined) return undefined;
+    return Number(val);
+  }, z.number().min(0).nullable().optional()),
 });

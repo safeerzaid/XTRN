@@ -16,7 +16,14 @@ const INITIAL_STATE = {
   sizes: '',
   stock: 0,
   discount: 0,
-  images: ''
+  images: '',
+  countryOfOrigin: '',
+  manufacturerName: '',
+  manufacturerAddress: '',
+  packerOrImporter: '',
+  netQuantity: '',
+  manufactureMonthYear: '',
+  mrp: ''
 };
 
 const DEPARTMENTS = ['men', 'women', 'sports', 'accessories'];
@@ -25,6 +32,7 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
   const [formData, setFormData] = useState(INITIAL_STATE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -34,7 +42,14 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
         images: product.images?.default?.join(', ') || '',
         originalPrice: product.originalPrice ?? '',
         discount: product.discount ?? '',
-        stock: product.stock ?? 0
+        stock: product.stock ?? 0,
+        countryOfOrigin: product.countryOfOrigin || '',
+        manufacturerName: product.manufacturerName || '',
+        manufacturerAddress: product.manufacturerAddress || '',
+        packerOrImporter: product.packerOrImporter || '',
+        netQuantity: product.netQuantity || '',
+        manufactureMonthYear: product.manufactureMonthYear || '',
+        mrp: product.mrp ?? ''
       });
     } else {
       setFormData(INITIAL_STATE);
@@ -65,7 +80,14 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
       sizes: formData.sizes ? formData.sizes.split(',').map(s => s.trim()).filter(Boolean) : [],
       images: {
         default: formData.images ? formData.images.split(',').map(s => s.trim()).filter(Boolean) : []
-      }
+      },
+      countryOfOrigin: formData.countryOfOrigin === '' ? undefined : formData.countryOfOrigin,
+      manufacturerName: formData.manufacturerName === '' ? undefined : formData.manufacturerName,
+      manufacturerAddress: formData.manufacturerAddress === '' ? undefined : formData.manufacturerAddress,
+      packerOrImporter: formData.packerOrImporter === '' ? undefined : formData.packerOrImporter,
+      netQuantity: formData.netQuantity === '' ? undefined : formData.netQuantity,
+      manufactureMonthYear: formData.manufactureMonthYear === '' ? undefined : formData.manufactureMonthYear,
+      mrp: parseOptionalNumber(formData.mrp)
     };
 
     try {
@@ -183,6 +205,51 @@ const ProductFormModal = ({ isOpen, onClose, onSave, product }) => {
               <input type="text" name="images" value={formData.images} onChange={handleChange} className="w-full border p-2 rounded" />
             </div>
           </div>
+
+          <div className="border border-gray-200 rounded-lg overflow-hidden mt-4">
+            <button
+              type="button"
+              onClick={() => setDetailsOpen(!detailsOpen)}
+              className="w-full bg-gray-50 px-4 py-3 text-left font-medium text-gray-800 flex justify-between items-center hover:bg-gray-100 transition-colors"
+            >
+              Legal and product details
+              <svg className={`w-5 h-5 transition-transform ${detailsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {detailsOpen && (
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-white">
+                <div>
+                  <label className="block text-sm font-medium mb-1">MRP (inclusive of all taxes)</label>
+                  <input type="number" name="mrp" min="0" value={formData.mrp} onChange={handleChange} className="w-full border p-2 rounded" placeholder="e.g. 5999" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Country of origin</label>
+                  <input type="text" name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} className="w-full border p-2 rounded" placeholder="e.g. India" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Manufacturer Name</label>
+                  <input type="text" name="manufacturerName" value={formData.manufacturerName} onChange={handleChange} className="w-full border p-2 rounded" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Manufacturer Address</label>
+                  <input type="text" name="manufacturerAddress" value={formData.manufacturerAddress} onChange={handleChange} className="w-full border p-2 rounded" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Packed or Imported by</label>
+                  <input type="text" name="packerOrImporter" value={formData.packerOrImporter} onChange={handleChange} className="w-full border p-2 rounded" />
+                  <p className="text-xs text-gray-500 mt-1">As printed on the product label</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Net Quantity</label>
+                  <input type="text" name="netQuantity" value={formData.netQuantity} onChange={handleChange} className="w-full border p-2 rounded" placeholder="e.g. 1 Pair" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Month and year of manufacture</label>
+                  <input type="text" name="manufactureMonthYear" value={formData.manufactureMonthYear} onChange={handleChange} className="w-full border p-2 rounded" placeholder="MM/YYYY" />
+                </div>
+              </div>
+            )}
+          </div>
+
           
           <div className="flex justify-end pt-4 border-t border-gray-200 gap-3 sticky bottom-0 bg-white">
             <button type="button" onClick={onClose} className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">Cancel</button>
